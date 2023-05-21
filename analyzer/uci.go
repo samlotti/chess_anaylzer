@@ -72,6 +72,18 @@ type UciProcess struct {
 	stdin  io.ReadCloser
 	stdout io.WriteCloser
 	estate EngineState
+
+	// options - The engine options.
+	Options map[string]string
+}
+
+// NewUci - creates a new instance of the engine!
+func NewUci(engine string) *UciProcess {
+	p := UciProcess{Engine: engine}
+	p.state = UciNotStarted
+	p.estate = ENotReady
+	p.Options = make(map[string]string)
+	return &p
 }
 
 func (p *UciProcess) Start() error {
@@ -139,6 +151,10 @@ func (p *UciProcess) monitor() {
 			p.SetEState(EOk)
 		}
 
+		if strings.HasPrefix(txt, "option") {
+			p.addOption(txt)
+		}
+
 	}
 }
 
@@ -161,13 +177,6 @@ func (p *UciProcess) Terminate() {
 	_ = p.stdout.Close()
 	_ = p.stdin.Close()
 	_ = p.cmd.Process.Kill()
-}
-
-func newUci(engine string) *UciProcess {
-	p := UciProcess{Engine: engine}
-	p.state = UciNotStarted
-	p.estate = ENotReady
-	return &p
 }
 
 func (p *UciProcess) GetEState() EngineState {
@@ -207,6 +216,8 @@ func NewGoOptions() *GoOptions {
 	return &GoOptions{}
 }
 
+// SendGo - Send the go command to the engine, pass in options to
+// configure the command.  default will run indefinitely.
 func (p *UciProcess) SendGo(opts *GoOptions) error {
 	if err := p.checkReady(); err != nil {
 		return err
@@ -226,13 +237,46 @@ func (p *UciProcess) SendGo(opts *GoOptions) error {
 
 }
 
-func (p *UciProcess) Stop() error {
-	if p.GetEState() != EOk {
-		return fmt.Errorf("engine not in ready state")
-	}
-	return nil
-}
+//// Stop - Tell the engine to stop calculating.
+//func (p *UciProcess) Stop() error {
+//	if p.GetEState() != EOk {
+//		return fmt.Errorf("engine not in ready state")
+//	}
+//	return nil
+//}
 
+// SendStop - Tell the engine to stop calculating.
 func (p *UciProcess) SendStop() error {
 	return p.send("stop")
+}
+
+// SetOption - set the options for the engine.
+// The options are stores in the engine Options map.
+func (p *UciProcess) SetOption(name string, val string) error {
+	return p.send(fmt.Sprintf("setoption name %s value %s", name, val))
+}
+
+// WaitMoveUpTo - wait for the move to complete, or send stop then wait a bit more
+func (p *UciProcess) WaitMoveUpTo(timeout time.Duration) error {
+	err := p.WaitOk(timeout)
+	if err == nil {
+		return nil
+
+	}
+
+	p.SendStop()
+	err = p.WaitOk(500 * time.Millisecond)
+	return err
+}
+
+func (p *UciProcess) IsReadyForMove() bool {
+	return p.GetEState() == EOk
+}
+
+// addOption - parses the option line from the engine
+// ex: option name Ponder type check default false
+func (p *UciProcess) addOption(txt string) {
+	txt = strings.TrimPrefix(txt, "option name ")
+	sects := strings.SplitN(txt, " ", 2)
+	p.Options[sects[0]] = sects[1]
 }
