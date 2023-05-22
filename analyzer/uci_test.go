@@ -20,7 +20,7 @@ func TestSegments(t *testing.T) {
 		u.SetPositionFen("2q1rr1k/3bbnnp/p2p1pp1/2pPp3/PpP1P1P1/1P2BNNP/2BQ1PRK/7R b - -")
 	assert.Nil(t, err)
 
-	err = u.SetOption("MultiPV", "5")
+	err = u.SetOption("MultiPV", "15")
 	assert.Nil(t, err)
 
 	// u.send("setoption name MultiPV value 5")

@@ -111,7 +111,12 @@ func (p *UciProcess) Start() error {
 	go p.monitor()
 
 	p.send("uci")
-	return nil
+
+	p.send("isready")
+
+	err = p.WaitOk(10 * time.Second)
+
+	return err
 }
 
 func (p *UciProcess) WaitOk(timeout time.Duration) error {
@@ -147,12 +152,20 @@ func (p *UciProcess) monitor() {
 			p.SetEState(EOk)
 		}
 
-		if strings.HasPrefix(txt, "bestmove") {
+		if txt == "readyok" {
 			p.SetEState(EOk)
+		}
+
+		if strings.HasPrefix(txt, "bestmove") {
+			p.setBestMove(txt)
 		}
 
 		if strings.HasPrefix(txt, "option") {
 			p.addOption(txt)
+		}
+
+		if strings.HasPrefix(txt, "info") {
+			p.addMoveInfo(txt)
 		}
 
 	}
@@ -279,4 +292,29 @@ func (p *UciProcess) addOption(txt string) {
 	txt = strings.TrimPrefix(txt, "option name ")
 	sects := strings.SplitN(txt, " ", 2)
 	p.Options[sects[0]] = sects[1]
+}
+
+/**
+info depth 15 seldepth 30 hashfull 58 tbhits 0 nodes 1720962 nps 1103672 score cp -124 time 1559 multipv 5 pv c8c7 f3e1 f8g8 h1g1 a6a5 f2f3 e7d8 d2f2 d8e7 e1d3 e8a8 f2d2 g7e8 h3h4 g8g7
+bestmove f8g8 ponder h1f1
+*/
+
+// setBestMove - parses the option line from the engine
+// ex: option name Ponder type check default false
+func (p *UciProcess) setBestMove(txt string) {
+	// bestmove f8g8 ponder h1f1
+	//txt = strings.TrimPrefix(txt, "option name ")
+	//sects := strings.SplitN(txt, " ", 2)
+	//p.Options[sects[0]] = sects[1]
+
+	p.SetEState(EOk)
+}
+
+// addMoveInfo - parses the option line from the engine
+// ex: option name Ponder type check default false
+func (p *UciProcess) addMoveInfo(txt string) {
+	// info depth 15 seldepth 30 hashfull 58 tbhits 0 nodes 1720962 nps 1103672 score cp -124 time 1559 multipv 5 pv c8c7 f3e1 f8g8 h1g1 a6a5 f2f3 e7d8 d2f2 d8e7 e1d3 e8a8 f2d2 g7e8 h3h4 g8g7
+	//txt = strings.TrimPrefix(txt, "option name ")
+	//sects := strings.SplitN(txt, " ", 2)
+	//p.Options[sects[0]] = sects[1]
 }
