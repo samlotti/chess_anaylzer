@@ -7,6 +7,10 @@ import (
 	"strings"
 )
 
+/**
+Chess board that can tell valid moves, make the moves ...
+*/
+
 const (
 	//  The square number for the piece.  Each piece takes 10 slots.  The # of each WP(example) is max of 10.
 	//  for first 10 are empty, next ten will contain the positions of the pawns on the board. (0->8)
