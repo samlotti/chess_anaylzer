@@ -1,6 +1,7 @@
 package ai
 
 import (
+	"chess_analyzer/minilex"
 	"fmt"
 	"strings"
 )
@@ -14,11 +15,11 @@ const (
 	nag        = "\\$\\d+"      //  Numeric annotation glyph
 	move       = "[-+\\w\\./]+" // # Anything else is a move
 	newline    = "\n"
-	whitespace = "\\s+"
+	//whitespace = "\\s+"
 )
 
 const (
-	TAG TokenId = UserTokeId + iota
+	TAG minilex.TokenId = minilex.UserTokeId + iota
 	COMMENT
 	RESUMPTION
 	MOVENUMBER
@@ -26,10 +27,10 @@ const (
 	NAG
 	MOVE
 	NEWLINE
-	WHITESPACE
+	//WHITESPACE
 )
 
-func AddPgnLexMap(lexer *MiniLexer) error {
+func AddPgnLexMap(lexer *minilex.MiniLexer) error {
 	err := lexer.AddPattern(TAG, tag)
 	if err == nil {
 		err = lexer.AddPattern(COMMENT, comment)
@@ -61,10 +62,10 @@ func AddPgnLexMap(lexer *MiniLexer) error {
 	if err == nil {
 		err = lexer.AddPattern(NEWLINE, newline)
 	}
-
-	if err == nil {
-		err = lexer.AddPattern(WHITESPACE, whitespace)
-	}
+	//
+	//if err == nil {
+	//	err = lexer.AddPattern(WHITESPACE, whitespace)
+	//}
 	return err
 }
 

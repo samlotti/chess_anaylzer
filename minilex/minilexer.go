@@ -1,4 +1,4 @@
-package ai
+package minilex
 
 import (
 	"fmt"
@@ -9,6 +9,10 @@ import (
 type TokenId int
 
 const UserTokeId = 100
+
+const (
+	TKEof TokenId = -1
+)
 
 type MatcherEntry struct {
 	Regex     string
@@ -35,6 +39,10 @@ type Token struct {
 	literal string
 	line    int
 	pos     int
+}
+
+func (t *Token) String() string {
+	return fmt.Sprintf("%d:%d = %d %s", t.line, t.pos, t.id, t.literal)
 }
 
 type MiniLexerOptions struct {
@@ -90,6 +98,16 @@ func (m *MiniLexer) AddPattern(id TokenId, pattern string) error {
 // NextToken - Returns the token for the beginning of the string
 func (m *MiniLexer) NextToken() (*Token, error) {
 	m.text = m.AdvanceSpaces(m.text)
+
+	if len(m.text) == 0 {
+		return &Token{
+			id:      TKEof,
+			literal: "",
+			line:    m.line,
+			pos:     m.pos,
+		}, nil
+	}
+
 	var curr *Token = nil
 	for _, matcher := range m.matchers {
 		r := matcher._compiled.Find([]byte(m.text))
@@ -116,10 +134,6 @@ func (m *MiniLexer) NextToken() (*Token, error) {
 	return curr, nil
 }
 
-func (m *MiniLexer) Lex(text string) ([]*Token, error) {
-	return nil, nil
-}
-
 // advanceInput
 // Move the input passed the token
 func (m *MiniLexer) advanceInput(tk *Token) {
@@ -140,18 +154,38 @@ func (m *MiniLexer) advanceInput(tk *Token) {
 // Move the input passed any spaces
 func (m *MiniLexer) AdvanceSpaces(text string) string {
 
-	slen := len(m.text)
 	r := strings.TrimLeftFunc(text, m.IsWhiteSpace)
-	m.pos += slen - len(m.text)
 	return r
 }
 
 func (m *MiniLexer) IsWhiteSpace(r rune) bool {
 	var rchar string = string(r)
-	m.pos += 1
-	if rchar == "\n" {
-		m.pos = 0
-		m.line += 1
+	var isW = strings.Contains(m.mo.whiteSpaceChar, rchar)
+	if isW {
+		m.pos += 1
+		if rchar == "\n" {
+			m.pos = 0
+			m.line += 1
+		}
 	}
-	return strings.Contains(m.mo.whiteSpaceChar, rchar)
+	return isW
+}
+
+func (m *MiniLexer) ReadAllTokens() ([]*Token, error) {
+
+	var tkList []*Token = nil
+
+	for {
+		tk, err := m.NextToken()
+		if err != nil {
+			return nil, err
+		}
+
+		if tk.id == TKEof {
+			break
+		}
+
+		tkList = append(tkList, tk)
+	}
+	return tkList, nil
 }
