@@ -17,18 +17,55 @@ const (
 	whitespace = "\\s+"
 )
 
-func GetPgnLexMap() map[string]string {
-	m := make(map[string]string)
-	m["tag"] = tag
-	m["comment"] = comment
-	m["resumption"] = resumption
-	m["moveNumber"] = moveNumber
-	m["endOfGame"] = endOfGame
-	m["nag"] = nag
-	m["move"] = move
-	m["newline"] = newline
-	m["whitespace"] = whitespace
-	return m
+const (
+	TAG TokenId = UserTokeId + iota
+	COMMENT
+	RESUMPTION
+	MOVENUMBER
+	ENDOFGAME
+	NAG
+	MOVE
+	NEWLINE
+	WHITESPACE
+)
+
+func AddPgnLexMap(lexer *MiniLexer) error {
+	err := lexer.AddPattern(TAG, tag)
+	if err == nil {
+		err = lexer.AddPattern(COMMENT, comment)
+	}
+	if err == nil {
+		err = lexer.AddPattern(COMMENT, comment)
+	}
+
+	if err == nil {
+		err = lexer.AddPattern(RESUMPTION, resumption)
+	}
+
+	if err == nil {
+		err = lexer.AddPattern(MOVENUMBER, moveNumber)
+	}
+
+	if err == nil {
+		err = lexer.AddPattern(ENDOFGAME, endOfGame)
+	}
+
+	if err == nil {
+		err = lexer.AddPattern(NAG, nag)
+	}
+
+	if err == nil {
+		err = lexer.AddPattern(MOVE, move)
+	}
+
+	if err == nil {
+		err = lexer.AddPattern(NEWLINE, newline)
+	}
+
+	if err == nil {
+		err = lexer.AddPattern(WHITESPACE, whitespace)
+	}
+	return err
 }
 
 type PgnWrapper struct {
