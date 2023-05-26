@@ -3,6 +3,7 @@ package ai
 import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
+	"io/ioutil"
 	"regexp"
 	"testing"
 )
@@ -95,4 +96,28 @@ func TestRegex(t *testing.T) {
 
 	match, _ := regexp.MatchString("p([a-z]+)ch", "peach cobbler")
 	fmt.Println(match)
+}
+
+func TestLoadManyPgn(t *testing.T) {
+	pgns, err := ioutil.ReadFile("../pgnFiles/warsawrap23.pgn")
+	assert.Nil(t, err)
+	pw := NewPgnWrapper(string(pgns))
+
+	//err = pw.Parse()
+	//assert.Nil(t, err)
+
+	cnt := 0
+	for {
+		if pw.IsEof() {
+			break
+		}
+
+		err = pw.Parse()
+		assert.Nil(t, err)
+		cnt++
+
+	}
+
+	assert.Equal(t, 45, cnt)
+
 }

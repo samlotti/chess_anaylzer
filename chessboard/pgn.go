@@ -12,8 +12,8 @@ const (
 	resumption = "\\d+\\.\\.\\."   // Resume moves after comment
 	moveNumber = "\\d+\\."
 	endOfGame  = "0-1|1-0|0-0|1/2-1/2"
-	nag        = "\\$\\d+"      //  Numeric annotation glyph
-	move       = "[-+\\w\\./]+" // # Anything else is a move
+	nag        = "\\$\\d+"           //  Numeric annotation glyph
+	move       = "[-+\\w\\.(=.)?/]+" // # Anything else is a move
 	newline    = "\n"
 	//whitespace = "\\s+"
 )
@@ -80,19 +80,20 @@ type PgnWrapper struct {
 func NewPgnWrapper(pgn string) *PgnWrapper {
 
 	p := &PgnWrapper{}
+
 	mo := minilex.NewMiniLexOptions()
 	mo.RemoveAsWhiteSpace("\n")
-
 	p.lex = minilex.NewMiniLexer(pgn, mo)
 	AddPgnLexMap(p.lex)
 
-	p.Moves = make([]string, 0)
-	p.Attributes = make(map[string]string)
-	p.board = NewBoard()
+	p.resetForNextPgn()
+
 	return p
 }
 
 func (p *PgnWrapper) Parse() error {
+
+	p.resetForNextPgn()
 
 	for {
 		tk, err := p.lex.PeekToken()
@@ -223,7 +224,7 @@ func (p *PgnWrapper) loadMoves() error {
 			return err
 		}
 
-		err = p.applyMoveSAN(tk.Literal)
+		err = p.applyMoveSAN(tk.Literal, false)
 		if err != nil {
 			return err
 		}
@@ -232,16 +233,20 @@ func (p *PgnWrapper) loadMoves() error {
 	return nil
 }
 
-func (p *PgnWrapper) applyMoveSAN(sanMove string) error {
+func (p *PgnWrapper) applyMoveSAN(sanMove string, debug bool) error {
 	fmt.Printf("Move: %s\n", sanMove)
 
 	// Get rid of check indicator
 	sanMove = strings.TrimSuffix(sanMove, "+")
 
 	// Check for available moves.
-	vmoves := GetAllValidMoves(p.board)
+	// vmoves := GetAllValidMoves(p.board)
+	vmoves := GetAllMoves(p.board)
 	for _, vm := range vmoves {
 		san := PgnForMove(p.board, vm)
+		if debug {
+			fmt.Printf(" possible move: %s for %s\n", san, sanMove)
+		}
 		if san == sanMove {
 			p.board.MakeMove(vm, sanMove)
 
@@ -252,6 +257,10 @@ func (p *PgnWrapper) applyMoveSAN(sanMove string) error {
 	}
 
 	p.board.printBoard(fmt.Sprintf("Move not found for: %s", sanMove))
+	//if !debug {
+	//	// So we can see it.
+	//	p.applyMoveSAN(sanMove, true)
+	//}
 
 	return fmt.Errorf(fmt.Sprintf("Move not found for: %s", sanMove))
 }
@@ -260,12 +269,20 @@ func (p *PgnWrapper) IsEof() bool {
 	return p.lex.IsEOF()
 }
 
+func (p *PgnWrapper) resetForNextPgn() {
+	p.Moves = make([]string, 0)
+	p.Attributes = make(map[string]string)
+	p.board = NewBoard()
+
+}
+
 // PgnForMove
 // Returns the pgn format for the move
 // Note: This must be before the move is made so we can see the possible moves
 func PgnForMove(b *Board, m Move) string {
 
-	moves := GetAllValidMoves(b)
+	// moves := GetAllValidMoves(b)
+	moves := GetAllMoves(b)
 
 	isAmbigRank := false
 	isAmbigFile := false
@@ -305,7 +322,7 @@ func asMoveString(b *Board, m Move, isAmbigRank bool, isAmbigFile bool) string {
 	fSq120 := getFromSq120(m)
 	fromPiece := b.pieces[fSq120]
 	fromFile := filesBrd[fSq120]
-	// fromRank := ranksBrd[getFromSq120(m)]
+	fromRank := ranksBrd[fSq120]
 
 	// toFile := filesBrd[getToSq120(m)]
 	tSq120 := getToSq120(m)
@@ -316,13 +333,20 @@ func asMoveString(b *Board, m Move, isAmbigRank bool, isAmbigFile bool) string {
 		sep = "x"
 	}
 
+	// Pawn can enpassant so.
+	if fromPiece == Piece_WPAWN || fromPiece == Piece_BPAWN {
+		if fromFile != filesBrd[tSq120] {
+			sep = "x"
+		}
+	}
+
 	trail := ""
 	//if ( m.isCheck() ) trail = "+";
 	//if ( m.isMate() ) trail = "#";
 
 	promote := ""
 	if promotedPiece != Piece_EMPTY {
-		promote = strings.ToUpper(fmt.Sprintf("= %s", string(PceCharLetter[promotedPiece])))
+		promote = strings.ToUpper(fmt.Sprintf("=%s", string(PceCharLetter[promotedPiece])))
 	}
 
 	if fromPiece == Piece_BKING {
@@ -379,7 +403,8 @@ func asMoveString(b *Board, m Move, isAmbigRank bool, isAmbigFile bool) string {
 
 	// For winboard... if Pawn move and Capture... and not ambig, Add the 'P'
 	if !isAmbigFile {
-		if capturedPiece != Piece_EMPTY {
+		if sep != "" {
+			// if capturedPiece != Piece_EMPTY {
 			if len(pieceIdent) == 0 {
 				// pieceIdent = "P";
 				// Per spec, should be the file
@@ -397,7 +422,7 @@ func asMoveString(b *Board, m Move, isAmbigRank bool, isAmbigFile bool) string {
 		fileString = fmt.Sprintf("%s", string(FileChar[fromFile]))
 	}
 	if isAmbigRank {
-		rankString = fmt.Sprintf("%s", string(RankChar[fromFile]))
+		rankString = fmt.Sprintf("%s", string(RankChar[fromRank]))
 	}
 
 	//log.Println(

@@ -648,6 +648,29 @@ func GetAllValidMoves(board *Board) []int {
 	return moves
 }
 
+// GetAllMoves
+// Returns all the moves, some are invalid ex, if king goes into check
+func GetAllMoves(board *Board) []int {
+
+	generateMoves(board)
+	// board.printMoveList()
+
+	moves := make([]int, 0)
+
+	for idx := board.moveListStart[board.ply]; idx < board.moveListStart[board.ply+1]; idx++ {
+		move := board.moveList[idx]
+		//if board.makeMove(move) == false {
+		//	// This is a valid case.  When king is in check
+		//	// println("  make move ", MoveToString(move) , "   at ", p.perft_leafNodes, " Not valid")
+		//	continue
+		//}
+		moves = append(moves, move)
+		//board.takeMove()
+
+	}
+	return moves
+}
+
 func MoveToSimpleString(move Move) string {
 	var fSq120 = getFromSq120(move)
 	var tSq120 = getToSq120(move)
