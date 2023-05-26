@@ -680,6 +680,8 @@ func (brd *Board) checkBoard() bool {
 	return ok
 }
 
+// makeMove - make the move on the board
+// can be undon with the takeMove
 func (brd *Board) makeMove(move Move) bool {
 	var from120 = getFromSq120(move)
 	var to120 = getToSq120(move)
@@ -924,10 +926,11 @@ func (this *Board) GetInternalMoveValueFromInputString(input string) (Move, erro
 	return NOMOVE, fmt.Errorf("Invalid move: %s", input)
 }
 
-/**
-Perform the move.
-The input is the string version of the move as an input
-*/
+//
+// MakeMove
+// Perform the move.
+// The input is the string version of the move as an input - for error message
+//
 func (this *Board) MakeMove(mv Move, input string) error {
 
 	// Reset the ply ...

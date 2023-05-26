@@ -35,23 +35,34 @@ func NewMatcher(id TokenId, matchExpression string) (*MatcherEntry, error) {
 }
 
 type Token struct {
-	id      TokenId
-	literal string
-	line    int
-	pos     int
+	Id      TokenId
+	Literal string
+	Line    int
+	Pos     int
 }
 
 func (t *Token) String() string {
-	return fmt.Sprintf("%d:%d = %d %s", t.line, t.pos, t.id, t.literal)
+	return fmt.Sprintf("%d:%d = %d %s", t.Line, t.Pos, t.Id, t.Literal)
+}
+
+func (t *Token) Is(id TokenId) bool {
+	return t.Id == id
+}
+
+func (t *Token) AssertIs(id TokenId) error {
+	if t.Id != id {
+		return fmt.Errorf("expected %d, found %d : %s at %d:%d", id, t.Id, t.Literal, t.Line, t.Pos)
+	}
+	return nil
 }
 
 type MiniLexerOptions struct {
-	whiteSpaceChar string
+	whiteSpaceChars string
 }
 
 func NewMiniLexOptions() *MiniLexerOptions {
 	r := &MiniLexerOptions{
-		whiteSpaceChar: "\n\t\v\f\r ",
+		whiteSpaceChars: "\n\t\v\f\r ",
 	}
 	return r
 }
@@ -60,7 +71,17 @@ func NewMiniLexOptions() *MiniLexerOptions {
 // this api can remove one from the list
 // ex:  mo.RemoveAsWhiteSpace("\n")
 func (mo *MiniLexerOptions) RemoveAsWhiteSpace(chr string) {
-	mo.whiteSpaceChar = strings.ReplaceAll(mo.whiteSpaceChar, chr, "")
+	mo.whiteSpaceChars = strings.ReplaceAll(mo.whiteSpaceChars, chr, "")
+}
+
+// SetWhiteSpace
+// Set your own whitespace
+func (mo *MiniLexerOptions) SetWhiteSpace(whiteSpaceChars string) {
+	mo.whiteSpaceChars = whiteSpaceChars
+}
+
+func (mo *MiniLexerOptions) GetWhiteSpaceCharacters() string {
+	return mo.whiteSpaceChars
 }
 
 type MiniLexer struct {
@@ -84,7 +105,7 @@ func NewMiniLexer(text string, mo *MiniLexerOptions) *MiniLexer {
 // Note all patters will have ^ implicitly added.
 func (m *MiniLexer) AddPattern(id TokenId, pattern string) error {
 	if id < UserTokeId {
-		return fmt.Errorf("id must be >= UserTokenId, %d", UserTokeId)
+		return fmt.Errorf("Id must be >= UserTokenId, %d", UserTokeId)
 	}
 	matcher, err := NewMatcher(id, pattern)
 	if err != nil {
@@ -95,16 +116,16 @@ func (m *MiniLexer) AddPattern(id TokenId, pattern string) error {
 	return nil
 }
 
-// NextToken - Returns the token for the beginning of the string
-func (m *MiniLexer) NextToken() (*Token, error) {
+// PeekToken - Returns the next token but will not advance.
+func (m *MiniLexer) PeekToken() (*Token, error) {
 	m.text = m.AdvanceSpaces(m.text)
 
 	if len(m.text) == 0 {
 		return &Token{
-			id:      TKEof,
-			literal: "",
-			line:    m.line,
-			pos:     m.pos,
+			Id:      TKEof,
+			Literal: "",
+			Line:    m.line,
+			Pos:     m.pos,
 		}, nil
 	}
 
@@ -114,15 +135,15 @@ func (m *MiniLexer) NextToken() (*Token, error) {
 		if len(r) > 0 {
 			if curr == nil {
 				curr = &Token{
-					id:      matcher.Id,
-					literal: string(r),
-					line:    m.line,
-					pos:     m.pos,
+					Id:      matcher.Id,
+					Literal: string(r),
+					Line:    m.line,
+					Pos:     m.pos,
 				}
 			} else {
-				if len(curr.literal) < len(r) {
-					curr.id = matcher.Id
-					curr.literal = string(r)
+				if len(curr.Literal) < len(r) {
+					curr.Id = matcher.Id
+					curr.Literal = string(r)
 				}
 			}
 		}
@@ -130,6 +151,17 @@ func (m *MiniLexer) NextToken() (*Token, error) {
 	if curr == nil {
 		return nil, fmt.Errorf("invalid character found: %c", m.text[0])
 	}
+	return curr, nil
+}
+
+// NextToken - Returns the token for the beginning of the string
+func (m *MiniLexer) NextToken() (*Token, error) {
+
+	curr, err := m.PeekToken()
+	if err != nil {
+		return nil, err
+	}
+
 	m.advanceInput(curr)
 	return curr, nil
 }
@@ -138,7 +170,7 @@ func (m *MiniLexer) NextToken() (*Token, error) {
 // Move the input passed the token
 func (m *MiniLexer) advanceInput(tk *Token) {
 
-	for _, c := range tk.literal {
+	for _, c := range tk.Literal {
 		m.pos += 1
 		if c == '\n' {
 			m.pos = 0
@@ -146,8 +178,8 @@ func (m *MiniLexer) advanceInput(tk *Token) {
 		}
 	}
 
-	m.text = m.text[len(tk.literal):len(m.text)]
-	//m.pos += len(tk.literal)
+	m.text = m.text[len(tk.Literal):len(m.text)]
+	//m.Pos += len(tk.Literal)
 }
 
 // AdvanceSpaces
@@ -160,7 +192,7 @@ func (m *MiniLexer) AdvanceSpaces(text string) string {
 
 func (m *MiniLexer) IsWhiteSpace(r rune) bool {
 	var rchar string = string(r)
-	var isW = strings.Contains(m.mo.whiteSpaceChar, rchar)
+	var isW = strings.Contains(m.mo.whiteSpaceChars, rchar)
 	if isW {
 		m.pos += 1
 		if rchar == "\n" {
@@ -181,11 +213,16 @@ func (m *MiniLexer) ReadAllTokens() ([]*Token, error) {
 			return nil, err
 		}
 
-		if tk.id == TKEof {
+		if tk.Id == TKEof {
 			break
 		}
 
 		tkList = append(tkList, tk)
 	}
 	return tkList, nil
+}
+
+func (m *MiniLexer) IsEOF() bool {
+	m.text = m.AdvanceSpaces(m.text)
+	return len(m.text) == 0
 }

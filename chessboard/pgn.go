@@ -7,9 +7,9 @@ import (
 )
 
 const (
-	tag        = "\\[.*?\\]"     // Capture tags as a unit
-	comment    = "\\{.*?\\}"     // Capture comments as a unit
-	resumption = "\\d+\\.\\.\\." // Resume moves after comment
+	tag        = "\\[.*?\\]"       // Capture tags as a unit
+	comment    = "\\{(.|\\n)*?\\}" // Capture comments as a unit
+	resumption = "\\d+\\.\\.\\."   // Resume moves after comment
 	moveNumber = "\\d+\\."
 	endOfGame  = "0-1|1-0|0-0|1/2-1/2"
 	nag        = "\\$\\d+"      //  Numeric annotation glyph
@@ -70,33 +70,41 @@ func AddPgnLexMap(lexer *minilex.MiniLexer) error {
 }
 
 type PgnWrapper struct {
-	Pgn        string
-	pos        int
-	line       int
-	Moves      []Move
+	lex        *minilex.MiniLexer
+	Moves      []string
 	Attributes map[string]string
 	board      *Board
 	StartFen   string
 }
 
 func NewPgnWrapper(pgn string) *PgnWrapper {
-	p := &PgnWrapper{Pgn: pgn}
-	p.Moves = make([]Move, 0)
+
+	p := &PgnWrapper{}
+	mo := minilex.NewMiniLexOptions()
+	mo.RemoveAsWhiteSpace("\n")
+
+	p.lex = minilex.NewMiniLexer(pgn, mo)
+	AddPgnLexMap(p.lex)
+
+	p.Moves = make([]string, 0)
 	p.Attributes = make(map[string]string)
-	p.pos = 0
-	p.line = 1
 	p.board = NewBoard()
 	return p
 }
 
 func (p *PgnWrapper) Parse() error {
-	// Remove leading NL
+
 	for {
-		if p.isNewLine() {
-			p.advance()
-		} else {
+		tk, err := p.lex.PeekToken()
+		if err != nil {
+			return err
+		}
+		if tk.Id != NEWLINE {
 			break
 		}
+
+		// Advance it
+		p.lex.NextToken()
 	}
 
 	err := p.loadAttributes()
@@ -104,7 +112,6 @@ func (p *PgnWrapper) Parse() error {
 		return err
 	}
 
-	p.advanceNL()
 	err = p.loadMoves()
 
 	return err
@@ -112,117 +119,53 @@ func (p *PgnWrapper) Parse() error {
 
 // loadAttributes - reads the attributed until blank line
 // [Event "F/S Return Match"]
+// Will be after the NewLine, ready for moves
 func (p *PgnWrapper) loadAttributes() error {
 	for {
-		// at end of attributes
-		if p.isNewLine() {
+		tk, err := p.lex.NextToken()
+		if err != nil {
+			return err
+		}
+
+		if tk.Is(NEWLINE) {
 			break
 		}
 
-		if !p.isChar('[') {
-			return fmt.Errorf(fmt.Sprintf("Expected '[' at pos: %d", p.pos))
-		}
-
-		p.advance()
-		key, err := p.readTil(' ')
+		err = tk.AssertIs(TAG)
 		if err != nil {
 			return err
 		}
-		p.advanceSpaces()
 
-		if !p.isChar('"') {
-			return fmt.Errorf(fmt.Sprintf("Expected '\"' at pos: %d", p.pos))
-		}
-		p.advance()
-		data, err := p.readTil('"')
+		tagKV := tk.Literal
+
+		// Advance Tag
+		tk, err = p.lex.NextToken()
 		if err != nil {
 			return err
 		}
-		p.advance()
-		p.advanceSpaces()
-		if !p.isChar(']') {
-			return fmt.Errorf(fmt.Sprintf("Expected ']' at pos: %d", p.pos))
+
+		err = tk.AssertIs(NEWLINE)
+		if err != nil {
+			return err
 		}
-		p.advance()
-		p.advanceSpaces()
-		p.advanceNL()
+
+		tagKV = strings.TrimSuffix(tagKV, "]")
+		tagKV = strings.TrimPrefix(tagKV, "[")
+		sects := strings.SplitN(tagKV, " ", 2)
+		key := sects[0]
+		data := strings.Trim(sects[1], "\"")
+
+		fmt.Printf("Tag: %s\n", tagKV)
 
 		fmt.Println("Found:", key, "  ", data)
 		p.Attributes[key] = data
 
-		if key == "FEN" {
-			p.StartFen = data
-		}
+		//if key == "FEN" {
+		//	p.StartFen = data
+		//}
 
 	}
 	return nil
-}
-
-func (p *PgnWrapper) advance() {
-	p.pos += 1
-
-	if p.isEof() {
-		return
-	}
-
-	if p.Pgn[p.pos] == '\n' {
-		p.line++
-	}
-}
-
-func (p *PgnWrapper) readTil(chr uint8) (string, error) {
-	st := p.pos
-	for {
-		if p.Pgn[p.pos] == chr {
-			break
-		}
-		p.advance()
-
-		if chr != '\n' {
-			if p.isNewLine() || p.isEof() {
-				return "", fmt.Errorf("invalid pgn at line %d, unexpected new line", p.line)
-			}
-		}
-
-		if p.isEof() {
-			return "", fmt.Errorf("invalid pgn at line %d, unexpected end of text", p.line)
-		}
-	}
-	str := p.Pgn[st:p.pos]
-	return str, nil
-}
-
-func (p *PgnWrapper) isNewLine() bool {
-	return p.Pgn[p.pos] == '\n'
-}
-
-func (p *PgnWrapper) isEof() bool {
-	return p.pos >= len(p.Pgn)
-}
-
-func (p *PgnWrapper) advanceSpaces() {
-	for {
-		if p.isSpace() {
-			p.advance()
-		} else {
-			break
-		}
-	}
-}
-
-func (p *PgnWrapper) isSpace() bool {
-	return p.Pgn[p.pos] == ' '
-}
-
-func (p *PgnWrapper) isChar(chr uint8) bool {
-	return p.Pgn[p.pos] == chr
-}
-
-func (p *PgnWrapper) advanceNL() {
-	p.advanceSpaces()
-	if p.isNewLine() {
-		p.advance()
-	}
 }
 
 // UP until the end or a newline, read all data.
@@ -235,52 +178,75 @@ func (p *PgnWrapper) loadMoves() error {
 	}
 
 	for {
-		if p.isEof() {
+		if p.lex.IsEOF() {
 			return nil
 		}
 
-		if p.isNewLine() {
-			return nil
-		}
-		line, err := p.readTil('\n')
+		tk, err := p.lex.PeekToken()
 		if err != nil {
 			return err
 		}
-		p.advanceNL()
-		fmt.Println("Line: ", line)
 
-		entries := strings.Split(line, " ")
-		for _, s := range entries {
-			s = strings.TrimSpace(s)
-			if strings.HasSuffix(s, ".") {
-				fmt.Printf("move# %s\n", s)
-			} else {
-				if strings.Contains(s, "-") {
-					// if s == "1" || s == "-1" || s == "1/2" {
-					fmt.Printf("end   %s\n", s)
-				} else {
-					fmt.Printf("move   %s\n", s)
-
-					err := p.applyMoveSAN(s)
-					if err != nil {
-						return err
-					}
-
-				}
-			}
+		if tk.Is(minilex.TKEof) {
+			return nil
 		}
+
+		tk, err = p.lex.NextToken()
+		if err != nil {
+			return err
+		}
+		if tk.Is(NEWLINE) {
+			// blank line is end of this game
+			if tk.Pos == 0 {
+				break
+			}
+			continue
+		}
+		if tk.Is(NAG) {
+			continue
+		}
+		if tk.Is(COMMENT) {
+			continue
+		}
+		if tk.Is(MOVENUMBER) {
+			continue
+		}
+		if tk.Is(ENDOFGAME) {
+			continue
+		}
+		if tk.Is(RESUMPTION) {
+			// ?
+			continue
+		}
+		err = tk.AssertIs(MOVE)
+		if err != nil {
+			return err
+		}
+
+		err = p.applyMoveSAN(tk.Literal)
+		if err != nil {
+			return err
+		}
+
 	}
 	return nil
 }
 
 func (p *PgnWrapper) applyMoveSAN(sanMove string) error {
+	fmt.Printf("Move: %s\n", sanMove)
+
+	// Get rid of check indicator
+	sanMove = strings.TrimSuffix(sanMove, "+")
 
 	// Check for available moves.
 	vmoves := GetAllValidMoves(p.board)
 	for _, vm := range vmoves {
 		san := PgnForMove(p.board, vm)
 		if san == sanMove {
-			p.board.makeMove(vm)
+			p.board.MakeMove(vm, sanMove)
+
+			p.Moves = append(p.Moves, MoveToString(vm))
+
 			return nil
 		}
 	}
@@ -288,6 +254,10 @@ func (p *PgnWrapper) applyMoveSAN(sanMove string) error {
 	p.board.printBoard(fmt.Sprintf("Move not found for: %s", sanMove))
 
 	return fmt.Errorf(fmt.Sprintf("Move not found for: %s", sanMove))
+}
+
+func (p *PgnWrapper) IsEof() bool {
+	return p.lex.IsEOF()
 }
 
 // PgnForMove

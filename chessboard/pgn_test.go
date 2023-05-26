@@ -31,7 +31,7 @@ f3 Bc8 34. Kf2 Bf5 35. Ra7 g6 36. Ra6+ Kc5 37. Ke1 Nf4 38. g3 Nxh3 39. Kd2 Kb5
 
 	assert.Equal(t, 7, len(pw.Attributes))
 
-	assert.True(t, pw.isEof())
+	assert.True(t, pw.IsEof())
 
 	//moves, err := LoadPgn(pgn)
 	//assert.Nil(t, err)
@@ -40,7 +40,7 @@ f3 Bc8 34. Kf2 Bf5 35. Ra7 g6 36. Ra6+ Kc5 37. Ke1 Nf4 38. g3 Nxh3 39. Kd2 Kb5
 
 func TestPgnWithManyTypesOfData(t *testing.T) {
 
-	var pgn = `[[Event "Vilnius All-Russian Masters"]
+	var pgn = `[Event "Vilnius All-Russian Masters"]
 [Site "Vilna (Vilnius) RUE"]
 [Date "1912.08.23"]
 [EventDate "1912.08.19"]
@@ -69,9 +69,13 @@ better course is 19.Nfd4 (19...Nxe5 20.Bxg5) seeking to establish equality.}
 	err := pw.Parse()
 	assert.Nil(t, err)
 
-	assert.Equal(t, 7, len(pw.Attributes))
+	assert.Equal(t, 12, len(pw.Attributes))
 
-	assert.True(t, pw.isEof())
+	assert.True(t, pw.IsEof())
+
+	for _, m := range pw.Moves {
+		fmt.Printf("Move: %s\n", m)
+	}
 
 	//moves, err := LoadPgn(pgn)
 	//assert.Nil(t, err)
@@ -80,7 +84,7 @@ better course is 19.Nfd4 (19...Nxe5 20.Bxg5) seeking to establish equality.}
 
 func TestRegex(t *testing.T) {
 
-	rTag, _ := regexp.Compile(tag)
+	rTag, _ := regexp.Compile("^" + tag)
 	r := rTag.Find([]byte("[Fen rfwefwef] test"))
 	fmt.Println(r)
 	assert.True(t, len(r) > 0)

@@ -90,62 +90,62 @@ f3 Bc8 34. Kf2 Bf5 35. Ra7 g6 36. Ra6+ Kc5 37. Ke1 Nf4 38. g3 Nxh3 39. Kd2 Kb5
 	AddPgnLexMap(ml)
 	tk, err := ml.NextToken()
 	assert.Nil(t, err)
-	assert.Equal(t, TAG, tk.id)
-	assert.Equal(t, "[Event \"F/S Return Match\"]", tk.literal)
+	assert.Equal(t, TAG, tk.Id)
+	assert.Equal(t, "[Event \"F/S Return Match\"]", tk.Literal)
 
 	tk, err = ml.NextToken()
 	assert.Nil(t, err)
-	assert.Equal(t, NEWLINE, tk.id)
-	assert.Equal(t, "\n", tk.literal)
-	assert.True(t, tk.pos > 5)
-	assert.True(t, tk.line == 1)
+	assert.Equal(t, NEWLINE, tk.Id)
+	assert.Equal(t, "\n", tk.Literal)
+	assert.True(t, tk.Pos > 5)
+	assert.True(t, tk.Line == 1)
 
 	tk, err = ml.NextToken()
 	assert.Nil(t, err)
-	assert.Equal(t, TAG, tk.id)
-	assert.Equal(t, "[Site \"Belgrade, Serbia JUG\"]", tk.literal)
+	assert.Equal(t, TAG, tk.Id)
+	assert.Equal(t, "[Site \"Belgrade, Serbia JUG\"]", tk.Literal)
 
 	tk, err = ml.NextToken()
 	assert.Nil(t, err)
-	assert.Equal(t, NEWLINE, tk.id)
-	assert.Equal(t, "\n", tk.literal)
-	assert.True(t, tk.pos > 5)
-	assert.True(t, tk.line == 2)
+	assert.Equal(t, NEWLINE, tk.Id)
+	assert.Equal(t, "\n", tk.Literal)
+	assert.True(t, tk.Pos > 5)
+	assert.True(t, tk.Line == 2)
 
 	tk, err = ml.NextToken()
 	assert.Nil(t, err)
-	assert.Equal(t, NEWLINE, tk.id)
-	assert.Equal(t, "\n", tk.literal)
-	assert.True(t, tk.pos == 0)
-	assert.True(t, tk.line == 3)
+	assert.Equal(t, NEWLINE, tk.Id)
+	assert.Equal(t, "\n", tk.Literal)
+	assert.True(t, tk.Pos == 0)
+	assert.True(t, tk.Line == 3)
 
 	tk, err = ml.NextToken()
 	assert.Nil(t, err)
-	assert.Equal(t, MOVENUMBER, tk.id)
-	assert.Equal(t, "1.", tk.literal)
-	assert.True(t, tk.pos == 0)
-	assert.True(t, tk.line == 4)
+	assert.Equal(t, MOVENUMBER, tk.Id)
+	assert.Equal(t, "1.", tk.Literal)
+	assert.True(t, tk.Pos == 0)
+	assert.True(t, tk.Line == 4)
 
 	tk, err = ml.NextToken()
 	assert.Nil(t, err)
-	assert.Equal(t, MOVE, tk.id)
-	assert.Equal(t, "e4", tk.literal)
-	assert.True(t, tk.pos == 3)
-	assert.True(t, tk.line == 4)
+	assert.Equal(t, MOVE, tk.Id)
+	assert.Equal(t, "e4", tk.Literal)
+	assert.True(t, tk.Pos == 3)
+	assert.True(t, tk.Line == 4)
 
 	tk, err = ml.NextToken()
 	assert.Nil(t, err)
-	assert.Equal(t, MOVE, tk.id)
-	assert.Equal(t, "e5", tk.literal)
-	assert.True(t, tk.pos == 6)
-	assert.True(t, tk.line == 4)
+	assert.Equal(t, MOVE, tk.Id)
+	assert.Equal(t, "e5", tk.Literal)
+	assert.True(t, tk.Pos == 6)
+	assert.True(t, tk.Line == 4)
 
 	tk, err = ml.NextToken()
 	assert.Nil(t, err)
-	assert.Equal(t, NEWLINE, tk.id)
-	assert.Equal(t, "\n", tk.literal)
-	assert.True(t, tk.pos > 6)
-	assert.True(t, tk.line == 4)
+	assert.Equal(t, NEWLINE, tk.Id)
+	assert.Equal(t, "\n", tk.Literal)
+	assert.True(t, tk.Pos > 6)
+	assert.True(t, tk.Line == 4)
 
 }
 
@@ -155,9 +155,9 @@ func TestMinLex2(t *testing.T) {
 [Event "F/S Return Match"] 
 [Site "Belgrade, Serbia JUG"] 
 
-1. e4 e5 
+1. e4 e5 {This opening is called the Ruy Lopez.} $12
 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 6. Re1 b5 7. Bb3 d6 8. c3 O-O 
-9. h3 Nb8 10. d4 Nbd7 11. c4 c6 12. cxb5 axb5 13. Nc3 Bb7 14. Bg5 b4 
+9. h3 Nb8 10. d4 Nbd7 11. c4 c6 12. cxb5 axb5 13. Nc3 Bb7 14. Bg5 b4 $1
 15. Nb1 h6 16. Bh4 c5 17. dxe5 Nxe4 18. Bxe7 Qxe7 19. exd6 Qf6 20. Nbd2 Nxd6 21.
 Nc4 Nxc4 22. Bxc4 Nb6 23. Ne5 Rae8 24. Bxf7+ Rxf7 25. Nxf7 Rxe1+ 26. Qxe1 Kxf7
 27. Qe3 Qg5 28. Qxg5 hxg5 29. b3 Ke6 30. a3 Kd6 31. axb4 cxb4 32. Ra5 Nd5 33.
@@ -176,6 +176,6 @@ f3 Bc8 34. Kf2 Bf5 35. Ra7 g6 36. Ra6+ Kc5 37. Ke1 Nf4 38. g3 Nxh3 39. Kd2 Kb5
 		fmt.Println(tk)
 	}
 
-	assert.Equal(t, 142, len(tkList))
+	assert.Equal(t, 146, len(tkList))
 
 }
