@@ -39,3 +39,33 @@ func TestSegments(t *testing.T) {
 	u.Terminate()
 
 }
+
+func TestParseInfo1(t *testing.T) {
+
+	u, err := UciInfoParse(
+		"info depth 11 seldepth 25 hashfull 17 tbhits 0 nodes 391537 nps 769164 score cp -305 time 509 multipv 3 pv a5b4",
+	)
+	assert.Nil(t, err)
+	assert.Equal(t, 11, u.Depth)
+	assert.Equal(t, 769164, u.Nps)
+	assert.Equal(t, -305, u.ScoreCP)
+	assert.Equal(t, 3, u.MPv)
+	assert.Equal(t, 1, len(u.Moves))
+	assert.Equal(t, 0, u.MateIn)
+
+}
+
+func TestParseInfo2(t *testing.T) {
+
+	u, err := UciInfoParse(
+		"info depth 15 seldepth 27 hashfull 47 tbhits 0 nodes 1312678 nps 1035602 score mate +3 time 1267 multipv 1 pv b1g6 h5g4 g6f5 g4h5",
+	)
+	assert.Nil(t, err)
+	assert.Equal(t, 15, u.Depth)
+	assert.Equal(t, 1035602, u.Nps)
+	assert.Equal(t, 15003, u.ScoreCP)
+	assert.Equal(t, 1, u.MPv)
+	assert.Equal(t, 4, len(u.Moves))
+	assert.Equal(t, 3, u.MateIn)
+
+}

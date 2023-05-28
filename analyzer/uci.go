@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -63,6 +64,86 @@ const (
 	EOk                      = 1
 	ECalculating             = 2
 )
+
+type UciInfo struct {
+	Depth   int      // the depth of the move
+	MPv     int      // the PV number
+	ScoreCP int      // score in centipawns  100 = one pawn, > 15000 = mate in 15001=1, - = mated in
+	MateIn  int      // 0=no mate, + = current player mates,  - other player mates
+	Moves   []string // the moves
+	Nps     int      // the nodes per sec
+}
+
+func UciInfoParse(info string) (*UciInfo, error) {
+
+	var sections = strings.Split(info, " ")
+	if sections[0] != "info" {
+		return nil, fmt.Errorf("expected 'info' in %s", info)
+	}
+
+	var err error
+	res := &UciInfo{}
+	pos := 1
+	for {
+		if pos >= len(sections) {
+			break
+		}
+		cmd := sections[pos]
+		switch cmd {
+		case "depth":
+			res.Depth, err = strconv.Atoi(sections[pos+1])
+			if err != nil {
+				return nil, err
+			}
+			pos += 2
+		case "nps":
+			res.Nps, err = strconv.Atoi(sections[pos+1])
+			if err != nil {
+				return nil, err
+			}
+			pos += 2
+		case "multipv":
+			res.MPv, err = strconv.Atoi(sections[pos+1])
+			if err != nil {
+				return nil, err
+			}
+			pos += 2
+		case "score":
+			pos += 1
+		case "cp":
+			res.ScoreCP, err = strconv.Atoi(sections[pos+1])
+			if err != nil {
+				return nil, err
+			}
+			pos += 2
+		case "mate":
+			res.MateIn, err = strconv.Atoi(sections[pos+1])
+			res.ScoreCP, err = strconv.Atoi(sections[pos+1])
+			if res.ScoreCP > 0 {
+				res.ScoreCP = 15000 + res.ScoreCP
+			} else {
+				res.ScoreCP = -15000 + res.ScoreCP
+			}
+			if err != nil {
+				return nil, err
+			}
+			pos += 2
+		case "pv":
+			pos++
+			for {
+				if pos >= len(sections) {
+					break
+				}
+				res.Moves = append(res.Moves, sections[pos])
+				pos++
+			}
+		default:
+			// Skip the command
+			pos += 1
+		}
+	}
+	return res, nil
+}
 
 type UciProcess struct {
 	lock   sync.Mutex
@@ -314,7 +395,9 @@ func (p *UciProcess) setBestMove(txt string) {
 // ex: option name Ponder type check default false
 func (p *UciProcess) addMoveInfo(txt string) {
 	// info depth 15 seldepth 30 hashfull 58 tbhits 0 nodes 1720962 nps 1103672 score cp -124 time 1559 multipv 5 pv c8c7 f3e1 f8g8 h1g1 a6a5 f2f3 e7d8 d2f2 d8e7 e1d3 e8a8 f2d2 g7e8 h3h4 g8g7
+	// info depth 4 seldepth 12 hashfull 0 tbhits 0 nodes 28043 nps 1016662 score mate +4 time 27 multipv 1 pv d7d1 e2d1 a3a2 b1c1 c5a3 e5b2
 	//txt = strings.TrimPrefix(txt, "option name ")
 	//sects := strings.SplitN(txt, " ", 2)
 	//p.Options[sects[0]] = sects[1]
+
 }
