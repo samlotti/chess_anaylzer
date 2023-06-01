@@ -148,6 +148,7 @@ func UciInfoParse(info string) (*UciInfo, error) {
 type UciProcess struct {
 	lock   sync.Mutex
 	Engine string
+	epath  string
 	cmd    *exec.Cmd
 	state  UciState
 	stdin  io.ReadCloser
@@ -160,7 +161,7 @@ type UciProcess struct {
 
 // NewUci - creates a new instance of the engine!
 func NewUci(engine string) *UciProcess {
-	p := UciProcess{Engine: engine}
+	p := UciProcess{Engine: engine, epath: Environment.EnginePath}
 	p.state = UciNotStarted
 	p.estate = ENotReady
 	p.Options = make(map[string]string)
@@ -168,7 +169,8 @@ func NewUci(engine string) *UciProcess {
 }
 
 func (p *UciProcess) Start() error {
-	p.cmd = exec.Command("../engines/" + p.Engine)
+	// p.cmd = exec.Command("./engines/" + p.Engine)
+	p.cmd = exec.Command(p.epath + p.Engine)
 	var err error
 
 	p.stdin, err = p.cmd.StdoutPipe()

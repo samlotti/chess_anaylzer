@@ -19,7 +19,7 @@ func TestAnalyzer1(t *testing.T) {
 	a.Fen = "2r3k1/p4p2/3Rp2p/1p2P1pK/8/1P4P1/P3Q2P/1q6 b - - 0 1"
 	a.Fen = "6k1/3b3r/1p1p4/p1n2p2/1PPNpP1q/P3Q1p1/1R1RB1P1/5K2 b - - 0-1"
 	a.Fen = "2r3k1/p4p2/3Rp2p/1p2P1pK/8/1P4P1/P3Q2P/1q6 b - - 0 1"
-	a.userMove = ""
+	a.UserMove = ""
 
 	r, err := a.AnalyzeFen()
 	assert.Nil(t, err)

@@ -17,7 +17,7 @@ Red: blunder  -> -.9
 // Analyzer - can analyze a position.
 type Analyzer struct {
 	Fen      string
-	userMove string
+	UserMove string
 }
 
 func NewAnalyzer() *Analyzer {
