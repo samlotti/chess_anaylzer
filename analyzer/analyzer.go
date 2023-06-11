@@ -26,6 +26,7 @@ func NewAnalyzer() *Analyzer {
 
 // AResults - Results of the analyzer.
 type AResults struct {
+	Score int32
 }
 
 // AnalyzeFen the position
@@ -68,6 +69,8 @@ func (a *Analyzer) AnalyzeFen() (*AResults, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	answer.Score = 101
 
 	return answer, nil
 

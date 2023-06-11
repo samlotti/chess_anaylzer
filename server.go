@@ -12,6 +12,9 @@ import (
 func main() {
 	fmt.Println("Chess Analyzer")
 
+	// The number of workers
+	analyzer.CreateFenWorkers(8)
+
 	analyzer.Environment.EnginePath = "./engines/"
 
 	fmt.Printf("Running the server:  http://localhost:8181\n")
