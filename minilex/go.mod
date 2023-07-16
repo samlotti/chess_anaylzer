@@ -1,11 +1,8 @@
-module chess_analyzer
+module github.com/samlotti/chess_anaylzer/chessboard/minilex
 
 go 1.18
 
-require (
-	github.com/samlotti/blip v0.8.10
-	github.com/stretchr/testify v1.8.3
-)
+require github.com/stretchr/testify v1.8.4
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect

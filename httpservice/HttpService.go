@@ -1,8 +1,8 @@
 package httpservice
 
 import (
-	"chess_analyzer/analyzer"
 	"fmt"
+	"github.com/samlotti/chess_anaylzer/analyzer"
 	"log"
 	"net/http"
 )
