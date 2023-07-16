@@ -1,6 +1,9 @@
 package analyzer
 
-import "fmt"
+import (
+	"fmt"
+	"sync"
+)
 
 // FenResponse is from worker to consumer
 type FenResponse struct {
@@ -22,11 +25,22 @@ type FenData struct {
 	RChannel chan *FenResponse
 }
 
-var fenChan = make(chan *FenData)
+var mutex = sync.Mutex{}
+
+var fenChan = make(chan *FenData, 1)
 
 // AnalyzeFenChannelSender - analyze this data.
-func AnalyzeFenChannelSender(fd *FenData) {
+// Returns false if the queue are busy
+// true if the fen was sent
+func AnalyzeFenChannelSender(fd *FenData) bool {
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	if len(fenChan) == cap(fenChan) {
+		return false
+	}
 	fenChan <- fd
+	return true
 }
 
 type FenWorker struct {

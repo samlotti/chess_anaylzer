@@ -32,17 +32,31 @@ func AnalyzeFen(w http.ResponseWriter, r *http.Request) {
 		UserMove: "",
 		RChannel: make(chan *analyzer.FenResponse),
 	}
-	analyzer.AnalyzeFenChannelSender(fd)
-	fresp := <-fd.RChannel
 
-	if fresp.Error != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("error processing request"))
-		log.Printf("error %s\n", fresp.Error)
-	} else {
-		w.Write([]byte(fmt.Sprintf("Score: %d\n", fresp.Score)))
-		w.Write([]byte(fmt.Sprintf("Worker: %d\n", fresp.Worker)))
-		w.Write([]byte("request completed"))
+	wasSent := analyzer.AnalyzeFenChannelSender(fd)
+	if !wasSent {
+		w.Write([]byte("server busy"))
+		return
+	}
+
+	for {
+		fresp := <-fd.RChannel
+
+		if fresp.Error != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("error processing request"))
+			log.Printf("error %s\n", fresp.Error)
+			return
+		} else {
+			w.Write([]byte(fmt.Sprintf("Pos: %s\n", fresp.Pos)))
+			w.Write([]byte(fmt.Sprintf("Score: %d\n", fresp.Score)))
+			w.Write([]byte(fmt.Sprintf("Worker: %d\n", fresp.Worker)))
+		}
+		if fresp.Done {
+			w.Write([]byte("request completed"))
+			return
+		}
+
 	}
 
 }

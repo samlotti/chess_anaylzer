@@ -13,7 +13,7 @@ func main() {
 	fmt.Println("Chess Analyzer")
 
 	// The number of workers
-	analyzer.CreateFenWorkers(8)
+	analyzer.CreateFenWorkers(1)
 
 	analyzer.Environment.EnginePath = "../engines/"
 
