@@ -1,8 +1,9 @@
-package analyzer
+package uci
 
 import (
 	"bufio"
 	"fmt"
+	"github.com/samlotti/chess_anaylzer/chessboard/common"
 	"io"
 	"os/exec"
 	"strconv"
@@ -64,6 +65,50 @@ const (
 	EOk                      = 1
 	ECalculating             = 2
 )
+
+type UciBestMove struct {
+	BestMove string
+	Ponder   string
+}
+
+type UciCallback struct {
+	Raw      string
+	BestMove *UciBestMove
+	Info     *UciInfo
+}
+
+// UciBestMoveParse - parses the best move line
+//
+// bestmove f4h6 ponder g7h6
+//
+func UciBestMoveParse(bm string) (*UciBestMove, error) {
+	var sections = strings.Split(bm, " ")
+	if sections[0] != "bestmove" {
+		return nil, fmt.Errorf("expected 'bestmove' in %s", bm)
+	}
+
+	var err error
+	res := &UciBestMove{}
+	pos := 0
+	for {
+		if pos >= len(sections) {
+			break
+		}
+		cmd := sections[pos]
+		switch cmd {
+		case "bestmove":
+			res.BestMove = sections[pos+1]
+			pos += 2
+		case "ponder":
+			res.Ponder = sections[pos+1]
+			pos += 2
+		default:
+			// Skip the command
+			pos += 1
+		}
+	}
+	return res, err
+}
 
 type UciInfo struct {
 	Depth   int      // the depth of the move
@@ -155,13 +200,15 @@ type UciProcess struct {
 	stdout io.WriteCloser
 	estate EngineState
 
+	callback chan *UciCallback
+
 	// options - The engine options.
 	Options map[string]string
 }
 
 // NewUci - creates a new instance of the engine!
 func NewUci(engine string) *UciProcess {
-	p := UciProcess{Engine: engine, epath: Environment.EnginePath}
+	p := UciProcess{Engine: engine, epath: common.Environment.EnginePath}
 	p.state = UciNotStarted
 	p.estate = ENotReady
 	p.Options = make(map[string]string)
@@ -230,6 +277,12 @@ func (p *UciProcess) monitor() {
 	for scanner.Scan() {
 		txt := scanner.Text()
 		fmt.Printf("Have: %s\n", txt)
+
+		if p.callback != nil {
+			p.callback <- &UciCallback{
+				Raw: txt,
+			}
+		}
 
 		if txt == "uciok" {
 			p.SetEState(EOk)
@@ -402,4 +455,8 @@ func (p *UciProcess) addMoveInfo(txt string) {
 	//sects := strings.SplitN(txt, " ", 2)
 	//p.Options[sects[0]] = sects[1]
 
+}
+
+func (p *UciProcess) SetAsyncChannel(callbacks chan *UciCallback) {
+	p.callback = callbacks
 }

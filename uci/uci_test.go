@@ -1,10 +1,10 @@
-package analyzer
+package uci
 
 import (
+	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
 )
-import "github.com/stretchr/testify/assert"
 
 func TestSegments(t *testing.T) {
 
@@ -67,5 +67,16 @@ func TestParseInfo2(t *testing.T) {
 	assert.Equal(t, 1, u.MPv)
 	assert.Equal(t, 4, len(u.Moves))
 	assert.Equal(t, 3, u.MateIn)
+
+}
+
+func TestParseBestmove1(t *testing.T) {
+
+	u, err := UciBestMoveParse(
+		"bestmove f4h6 ponder g7h6",
+	)
+	assert.Nil(t, err)
+	assert.Equal(t, "f4h6", u.BestMove)
+	assert.Equal(t, "g7h6", u.Ponder)
 
 }

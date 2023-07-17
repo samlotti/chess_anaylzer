@@ -2,10 +2,7 @@ module github.com/samlotti/chess_anaylzer/chessboard
 
 go 1.18
 
-replace github.com/samlotti/chess_anaylzer/minilex => ../minilex
-
 require (
-	github.com/samlotti/chess_anaylzer/minilex v0.0.0-00010101000000-000000000000
 	github.com/stretchr/testify v1.8.4
 )
 

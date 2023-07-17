@@ -1,4 +1,4 @@
-package analyzer
+package common
 
 type environment struct {
 	EnginePath string // the path to the engine location

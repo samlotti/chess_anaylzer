@@ -1,4 +1,4 @@
-package analyzer
+package uci
 
 type _UciManager struct {
 }

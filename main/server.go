@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/samlotti/blip/blipUtil"
 	"github.com/samlotti/chess_anaylzer/analyzer"
+	. "github.com/samlotti/chess_anaylzer/chessboard/common"
 	"github.com/samlotti/chess_anaylzer/httpservice"
 	"log"
 	"net/http"
@@ -15,7 +16,7 @@ func main() {
 	// The number of workers
 	analyzer.CreateFenWorkers(1)
 
-	analyzer.Environment.EnginePath = "../engines/"
+	Environment.EnginePath = "../engines/"
 
 	fmt.Printf("Running the server:  http://localhost:8181\n")
 

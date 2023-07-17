@@ -2,6 +2,7 @@ package analyzer
 
 import (
 	"fmt"
+	. "github.com/samlotti/chess_anaylzer/chessboard/common"
 	"sync"
 )
 
@@ -72,20 +73,26 @@ func (f *FenWorker) runLoop() {
 
 		f.analyzer.Fen = msg.Fen
 		f.analyzer.UserMove = msg.UserMove
-		rst, err := f.analyzer.AnalyzeFen()
 
-		fr := &FenResponse{}
-		fr.Done = true
-		if err != nil {
-			fr.Error = err
-		} else {
-			fr.Score = rst.Score
-		}
-		fr.Worker = f.seq
+		dchan := make(chan struct{}, 10)
+		rchan := make(chan *AResults, 10)
+		go func() {
+			for {
+				m := <-rchan
+				if m.Done {
+					dchan <- struct{}{}
+					return
+				}
+			}
+		}()
 
-		msg.RChannel <- fr
+		f.analyzer.AnalyzeFen(rchan)
+
+		// whait for complete
+		<-dchan
 
 		Utils.AdjustFenWorker(1)
+
 	}
 
 }

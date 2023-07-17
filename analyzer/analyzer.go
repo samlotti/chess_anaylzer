@@ -1,6 +1,8 @@
 package analyzer
 
 import (
+	. "github.com/samlotti/chess_anaylzer/uci"
+	"strings"
 	"time"
 )
 
@@ -24,15 +26,35 @@ func NewAnalyzer() *Analyzer {
 	return &Analyzer{}
 }
 
+type RCode string
+
+const (
+	RCODE_DONE     RCode = "done"
+	RCODE_ERROR          = "err"
+	RCODE_BESTMOVE       = "bm"
+)
+
 // AResults - Results of the analyzer.
 type AResults struct {
-	Score int32
+	RCode    RCode
+	Err      error
+	Score    int32
+	Done     bool
+	BestMove string
+	Ponder   string
+}
+
+func AResultsError(err error) *AResults {
+	return &AResults{
+		RCode: RCODE_ERROR,
+		Err:   err,
+	}
 }
 
 // AnalyzeFen the position
 // Returns Best move, Your move, top X good moves.
 // Top X the least losing moves
-func (a *Analyzer) AnalyzeFen() (*AResults, error) {
+func (a *Analyzer) AnalyzeFen(rchan chan *AResults) {
 
 	// The best move value used as the baseline.
 	// The diff between the best move and players move
@@ -40,20 +62,42 @@ func (a *Analyzer) AnalyzeFen() (*AResults, error) {
 
 	u, err := UciManager().GetUci("zahak")
 	if err != nil {
-		return nil, err
+		rchan <- AResultsError(err)
+		return
 	}
 	defer UciManager().Return(u)
 
-	answer := &AResults{}
+	cb := make(chan *UciCallback, 10)
+	u.SetAsyncChannel(cb)
+
+	cbf := func() {
+		println("Waiting for CB")
+		for {
+			cbc := <-cb
+			println("CB: ", cbc.Raw)
+
+			answer := &AResults{}
+
+			rchan <- answer
+
+			if strings.HasPrefix(cbc.Raw, "best") {
+				println("done!!")
+				return
+			}
+		}
+	}
+	go cbf()
 
 	err = u.SetPositionFen(a.Fen)
 	if err != nil {
-		return nil, err
+		rchan <- AResultsError(err)
+		return
 	}
 
 	err = u.SetOption("MultiPV", "10")
 	if err != nil {
-		return nil, err
+		rchan <- AResultsError(err)
+		return
 	}
 
 	opts := &GoOptions{
@@ -62,16 +106,14 @@ func (a *Analyzer) AnalyzeFen() (*AResults, error) {
 	}
 	err = u.SendGo(opts)
 	if err != nil {
-		return nil, err
+		rchan <- AResultsError(err)
+		return
 	}
 
 	err = u.WaitMoveUpTo(5 * time.Second)
 	if err != nil {
-		return nil, err
+		rchan <- AResultsError(err)
+		return
 	}
-
-	answer.Score = 101
-
-	return answer, nil
 
 }
