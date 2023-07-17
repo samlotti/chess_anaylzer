@@ -8,15 +8,12 @@ import (
 
 // FenResponse is from worker to consumer
 type FenResponse struct {
-	Pvar  int32  // PV number
-	Score int32  // the score of the move
-	Pos   string // The position
-
-	Error error // IF there is an error
-
-	Worker int64
-
-	Done bool // The end of the messages
+	RCode      RCode
+	Error      error // IF there is an error
+	Worker     int64
+	ARBestMove *ARBestMove
+	ARInfo     *ARInfo
+	Done       bool // The end of the messages
 }
 
 type FenData struct {
@@ -83,6 +80,13 @@ func (f *FenWorker) runLoop() {
 					dchan <- struct{}{}
 					return
 				}
+				fr := &FenResponse{}
+				fr.ARInfo = m.Info
+				fr.ARBestMove = m.BestMode
+				fr.Error = m.Err
+				fr.Done = m.Done
+				fr.RCode = m.RCode
+				msg.RChannel <- fr
 			}
 		}()
 

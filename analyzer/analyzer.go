@@ -1,8 +1,8 @@
 package analyzer
 
 import (
+	"fmt"
 	. "github.com/samlotti/chess_anaylzer/uci"
-	"strings"
 	"time"
 )
 
@@ -29,19 +29,33 @@ func NewAnalyzer() *Analyzer {
 type RCode string
 
 const (
-	RCODE_DONE     RCode = "done"
-	RCODE_ERROR          = "err"
+	RCODE_INFO     RCode = "info"
 	RCODE_BESTMOVE       = "bm"
+	RCODE_ERROR          = "error"
 )
+
+type ARBestMove struct {
+	BestMove string
+	Ponder   string
+}
+
+type ARInfo struct {
+	Depth   int      // the depth of the move
+	MPv     int      // the PV number
+	ScoreCP int      // score in centipawns  100 = one pawn, > 15000 = mate in 15001=1, - = mated in
+	MateIn  int      // 0=no mate, + = current player mates,  - other player mates
+	Moves   []string // the moves
+	Nps     int      // the nodes per sec
+}
 
 // AResults - Results of the analyzer.
 type AResults struct {
-	RCode    RCode
-	Err      error
-	Score    int32
-	Done     bool
-	BestMove string
-	Ponder   string
+	RCode RCode
+	Err   error
+	Done  bool
+
+	BestMode *ARBestMove
+	Info     *ARInfo
 }
 
 func AResultsError(err error) *AResults {
@@ -74,14 +88,37 @@ func (a *Analyzer) AnalyzeFen(rchan chan *AResults) {
 		println("Waiting for CB")
 		for {
 			cbc := <-cb
-			println("CB: ", cbc.Raw)
+			fmt.Printf("CB: %v\n", cbc)
 
 			answer := &AResults{}
+			if cbc.BestMove != nil {
+				answer.RCode = RCODE_BESTMOVE
+				answer.Err = cbc.BestMove.Err
+				answer.BestMode = &ARBestMove{}
+				answer.BestMode.BestMove = cbc.BestMove.BestMove
+				answer.BestMode.Ponder = cbc.BestMove.Ponder
+				answer.Done = true
+			}
+			if cbc.Info != nil {
+				answer.RCode = RCODE_INFO
+				answer.Err = cbc.Info.Err
+				answer.Info = &ARInfo{}
+				answer.Info.Moves = cbc.Info.Moves
+				answer.Info.Depth = cbc.Info.Depth
+				answer.Info.Nps = cbc.Info.Nps
+				answer.Info.ScoreCP = cbc.Info.ScoreCP
+				answer.Info.MPv = cbc.Info.MPv
+				answer.Info.MateIn = cbc.Info.MateIn
+			}
+
+			if answer.Err != nil {
+				answer.RCode = RCODE_ERROR
+			}
 
 			rchan <- answer
 
-			if strings.HasPrefix(cbc.Raw, "best") {
-				println("done!!")
+			if answer.Done {
+				println("DONE")
 				return
 			}
 		}

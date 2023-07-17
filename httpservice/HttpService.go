@@ -48,8 +48,8 @@ func AnalyzeFen(w http.ResponseWriter, r *http.Request) {
 			log.Printf("error %s\n", fresp.Error)
 			return
 		} else {
-			w.Write([]byte(fmt.Sprintf("Pos: %s\n", fresp.Pos)))
-			w.Write([]byte(fmt.Sprintf("Score: %d\n", fresp.Score)))
+			fmt.Printf(">>> %+v\n", fresp)
+			w.Write([]byte(fmt.Sprintf("%+v\n", fresp)))
 			w.Write([]byte(fmt.Sprintf("Worker: %d\n", fresp.Worker)))
 		}
 		if fresp.Done {

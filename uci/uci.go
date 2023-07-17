@@ -67,6 +67,7 @@ const (
 )
 
 type UciBestMove struct {
+	Err      error
 	BestMove string
 	Ponder   string
 }
@@ -80,14 +81,12 @@ type UciCallback struct {
 // UciBestMoveParse - parses the best move line
 //
 // bestmove f4h6 ponder g7h6
-//
-func UciBestMoveParse(bm string) (*UciBestMove, error) {
+func UciBestMoveParse(bm string) *UciBestMove {
 	var sections = strings.Split(bm, " ")
 	if sections[0] != "bestmove" {
-		return nil, fmt.Errorf("expected 'bestmove' in %s", bm)
+		return nil
 	}
 
-	var err error
 	res := &UciBestMove{}
 	pos := 0
 	for {
@@ -107,10 +106,11 @@ func UciBestMoveParse(bm string) (*UciBestMove, error) {
 			pos += 1
 		}
 	}
-	return res, err
+	return res
 }
 
 type UciInfo struct {
+	Err     error
 	Depth   int      // the depth of the move
 	MPv     int      // the PV number
 	ScoreCP int      // score in centipawns  100 = one pawn, > 15000 = mate in 15001=1, - = mated in
@@ -119,11 +119,11 @@ type UciInfo struct {
 	Nps     int      // the nodes per sec
 }
 
-func UciInfoParse(info string) (*UciInfo, error) {
+func UciInfoParse(info string) *UciInfo {
 
 	var sections = strings.Split(info, " ")
 	if sections[0] != "info" {
-		return nil, fmt.Errorf("expected 'info' in %s", info)
+		return nil
 	}
 
 	var err error
@@ -138,19 +138,22 @@ func UciInfoParse(info string) (*UciInfo, error) {
 		case "depth":
 			res.Depth, err = strconv.Atoi(sections[pos+1])
 			if err != nil {
-				return nil, err
+				res.Err = err
+				return res
 			}
 			pos += 2
 		case "nps":
 			res.Nps, err = strconv.Atoi(sections[pos+1])
 			if err != nil {
-				return nil, err
+				res.Err = err
+				return res
 			}
 			pos += 2
 		case "multipv":
 			res.MPv, err = strconv.Atoi(sections[pos+1])
 			if err != nil {
-				return nil, err
+				res.Err = err
+				return res
 			}
 			pos += 2
 		case "score":
@@ -158,7 +161,8 @@ func UciInfoParse(info string) (*UciInfo, error) {
 		case "cp":
 			res.ScoreCP, err = strconv.Atoi(sections[pos+1])
 			if err != nil {
-				return nil, err
+				res.Err = err
+				return res
 			}
 			pos += 2
 		case "mate":
@@ -170,7 +174,8 @@ func UciInfoParse(info string) (*UciInfo, error) {
 				res.ScoreCP = -15000 + res.ScoreCP
 			}
 			if err != nil {
-				return nil, err
+				res.Err = err
+				return res
 			}
 			pos += 2
 		case "pv":
@@ -187,7 +192,7 @@ func UciInfoParse(info string) (*UciInfo, error) {
 			pos += 1
 		}
 	}
-	return res, nil
+	return res
 }
 
 type UciProcess struct {
@@ -280,7 +285,9 @@ func (p *UciProcess) monitor() {
 
 		if p.callback != nil {
 			p.callback <- &UciCallback{
-				Raw: txt,
+				Raw:      txt,
+				BestMove: UciBestMoveParse(txt),
+				Info:     UciInfoParse(txt),
 			}
 		}
 
