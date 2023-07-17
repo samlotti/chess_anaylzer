@@ -76,10 +76,7 @@ func (f *FenWorker) runLoop() {
 		go func() {
 			for {
 				m := <-rchan
-				if m.Done {
-					dchan <- struct{}{}
-					return
-				}
+
 				fr := &FenResponse{}
 				fr.ARInfo = m.Info
 				fr.ARBestMove = m.BestMode
@@ -87,6 +84,12 @@ func (f *FenWorker) runLoop() {
 				fr.Done = m.Done
 				fr.RCode = m.RCode
 				msg.RChannel <- fr
+
+				if m.Done {
+					dchan <- struct{}{}
+					return
+				}
+
 			}
 		}()
 

@@ -39,6 +39,10 @@ type ARBestMove struct {
 	Ponder   string
 }
 
+func (b *ARBestMove) String() string {
+	return fmt.Sprintf("best:%s", b.BestMove)
+}
+
 type ARInfo struct {
 	Depth   int      // the depth of the move
 	MPv     int      // the PV number
@@ -46,6 +50,10 @@ type ARInfo struct {
 	MateIn  int      // 0=no mate, + = current player mates,  - other player mates
 	Moves   []string // the moves
 	Nps     int      // the nodes per sec
+}
+
+func (b *ARInfo) String() string {
+	return fmt.Sprintf("%d: depth: %d Sc:%d  M:%d > %v", b.MPv, b.Depth, b.ScoreCP, b.MateIn, b.Moves)
 }
 
 // AResults - Results of the analyzer.
