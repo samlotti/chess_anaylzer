@@ -84,6 +84,7 @@ func AResultsError(err error) *AResults {
 	return &AResults{
 		RCode: RCODE_ERROR,
 		Err:   err,
+		Done:  true,
 	}
 }
 
@@ -141,8 +142,13 @@ func (a *Analyzer) AnalyzeFen(rchan chan *AResults) {
 				answer.Info.MateIn = cbc.Info.MateIn
 			}
 
+			if cbc.Err != nil {
+				answer.Err = cbc.Err
+			}
+
 			if answer.Err != nil {
 				answer.RCode = RCODE_ERROR
+				answer.Done = true
 			}
 
 			rchan <- answer

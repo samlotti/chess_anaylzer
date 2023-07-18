@@ -10,11 +10,12 @@ import (
 	"net/http"
 )
 
+//go:generate blip -dir ../template
 func main() {
 	fmt.Println("Chess Analyzer")
 
 	// The number of workers
-	analyzer.CreateFenWorkers(1)
+	analyzer.CreateFenWorkers(5)
 
 	Environment.EnginePath = "../engines/"
 
@@ -31,6 +32,8 @@ func main() {
 	//http.HandleFunc("/users/listAll", UListAll)
 	//http.HandleFunc("/users/listActive", UListActive)
 	//http.HandleFunc("/users/view/", UView)
+
+	http.HandleFunc("/", httpservice.Index)
 
 	http.HandleFunc("/chess/ai/fen", httpservice.AnalyzeFen)
 

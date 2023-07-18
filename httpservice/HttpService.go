@@ -1,12 +1,24 @@
 package httpservice
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/samlotti/chess_anaylzer/analyzer"
+	"github.com/samlotti/chess_anaylzer/blipped/template"
 	"github.com/samlotti/chess_anaylzer/chessboard/common"
 	"log"
 	"net/http"
 )
+
+func BaseCtx() context.Context {
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, "title", "Chess AI")
+	return ctx
+}
+
+func Index(w http.ResponseWriter, r *http.Request) {
+	template.IndexRender(BaseCtx(), w)
+}
 
 // AnalyzeFen
 // http://localhost:8181/chess/ai/fen?fen=2q1rr1k/3bbnnp/p2p1pp1/2pPp3/PpP1P1P1/1P2BNNP/2BQ1PRK/7R%20b%20-%20-

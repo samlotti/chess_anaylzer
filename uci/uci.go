@@ -52,6 +52,7 @@ type UciCallback struct {
 	Raw      string
 	BestMove *UciBestMove
 	Info     *UciInfo
+	Err      error
 }
 
 // UciBestMoveParse - parses the best move line
@@ -268,8 +269,14 @@ func (p *UciProcess) monitor() {
 				BestMove: UciBestMoveParse(txt),
 				Info:     UciInfoParse(txt),
 			}
+
+			if strings.Contains(txt, "invalid") {
+				data.Err = fmt.Errorf("%s", txt)
+			}
+
 			if data.BestMove != nil ||
-				data.Info != nil {
+				data.Info != nil ||
+				data.Err != nil {
 				p.callback <- data
 			}
 		}

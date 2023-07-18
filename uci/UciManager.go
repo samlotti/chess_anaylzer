@@ -1,9 +1,14 @@
 package uci
 
+import "fmt"
+
 type _UciManager struct {
 }
 
 func (m *_UciManager) GetUci(engine string) (*UciProcess, error) {
+	if Verbose {
+		fmt.Printf("Get UCI: %s\n", engine)
+	}
 	u := NewUci(engine)
 	err := u.Start()
 	return u, err
@@ -11,6 +16,9 @@ func (m *_UciManager) GetUci(engine string) (*UciProcess, error) {
 
 func (m *_UciManager) Return(uci *UciProcess) {
 	uci.Terminate()
+	if Verbose {
+		fmt.Printf("End UCI\n")
+	}
 }
 
 var _manager *_UciManager = &_UciManager{}

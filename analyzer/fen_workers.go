@@ -2,7 +2,7 @@ package analyzer
 
 import (
 	"fmt"
-	. "github.com/samlotti/chess_anaylzer/chessboard/common"
+	"github.com/samlotti/chess_anaylzer/chessboard/common"
 	"sync"
 )
 
@@ -55,7 +55,7 @@ var fenWorkers = make([]*FenWorker, 0)
 func CreateFenWorkers(num int) {
 	for i := 1; i <= num; i++ {
 		var fw = &FenWorker{
-			seq: Utils.NextSeq(),
+			seq: common.Utils.NextSeq(),
 		}
 		go fw.runLoop()
 		fenWorkers = append(fenWorkers, fw)
@@ -65,11 +65,11 @@ func CreateFenWorkers(num int) {
 // runLoop -- Worker that waits for fen requests
 func (f *FenWorker) runLoop() {
 	println("Fen worker started: ", f.seq)
-	Utils.AdjustFenWorker(1)
+	common.Utils.AdjustFenWorker(1)
 	f.analyzer = NewAnalyzer()
 	for {
 		msg := <-fenChan
-		Utils.AdjustFenWorker(-1)
+		common.Utils.AdjustFenWorker(-1)
 		fmt.Printf("Fen worker started %d: %s\n", f.seq, msg.Fen)
 
 		f.analyzer.NumPVLines = msg.NumLines
@@ -105,10 +105,10 @@ func (f *FenWorker) runLoop() {
 
 		f.analyzer.AnalyzeFen(rchan)
 
-		// whait for complete
+		// wait for complete
 		<-dchan
 
-		Utils.AdjustFenWorker(1)
+		common.Utils.AdjustFenWorker(1)
 
 	}
 
