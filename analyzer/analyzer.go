@@ -2,7 +2,8 @@ package analyzer
 
 import (
 	"fmt"
-	. "github.com/samlotti/chess_anaylzer/uci"
+	"github.com/samlotti/chess_anaylzer/uci"
+	"strconv"
 	"time"
 )
 
@@ -16,15 +17,25 @@ Red: blunder  -> -.9
 
 */
 
+const (
+	DefaultAnalyzePerMoveSec = 15
+	Verbose                  = true
+)
+
 // Analyzer - can analyze a position.
 type Analyzer struct {
-	Fen      string
-	UserMove string
-	Depth    int
+	Fen        string
+	UserMove   string // move that is being analyzed
+	Depth      int
+	MaxTimeSec int
+	NumPVLines int
 }
 
 func NewAnalyzer() *Analyzer {
-	return &Analyzer{}
+	return &Analyzer{
+		MaxTimeSec: DefaultAnalyzePerMoveSec,
+		NumPVLines: 5,
+	}
 }
 
 type RCode string
@@ -63,6 +74,8 @@ type AResults struct {
 	Err   error
 	Done  bool
 
+	UserMove string
+
 	BestMode *ARBestMove
 	Info     *ARInfo
 }
@@ -83,23 +96,31 @@ func (a *Analyzer) AnalyzeFen(rchan chan *AResults) {
 	// The diff between the best move and players move
 	// Is used determine the response of inaccuracy / blunder ...
 
-	u, err := UciManager().GetUci("zahak")
+	u, err := uci.UciManager().GetUci("zahak")
 	if err != nil {
 		rchan <- AResultsError(err)
 		return
 	}
-	defer UciManager().Return(u)
+	defer uci.UciManager().Return(u)
 
-	cb := make(chan *UciCallback, 10)
+	cb := make(chan *uci.UciCallback, 10)
 	u.SetAsyncChannel(cb)
 
 	cbf := func() {
-		println("Waiting for CB")
+		if Verbose {
+			println("Waiting for UCI responses")
+		}
+
 		for {
 			cbc := <-cb
-			fmt.Printf("CB: %v\n", cbc)
+			if Verbose {
+				fmt.Printf("From UCI: %v\n", cbc)
+			}
 
 			answer := &AResults{}
+
+			answer.UserMove = a.UserMove
+
 			if cbc.BestMove != nil {
 				answer.RCode = RCODE_BESTMOVE
 				answer.Err = cbc.BestMove.Err
@@ -127,7 +148,10 @@ func (a *Analyzer) AnalyzeFen(rchan chan *AResults) {
 			rchan <- answer
 
 			if answer.Done {
-				println("DONE")
+				if Verbose {
+					println("analyzer done")
+				}
+
 				return
 			}
 		}
@@ -140,13 +164,13 @@ func (a *Analyzer) AnalyzeFen(rchan chan *AResults) {
 		return
 	}
 
-	err = u.SetOption("MultiPV", "10")
+	err = u.SetOption("MultiPV", strconv.Itoa(a.NumPVLines))
 	if err != nil {
 		rchan <- AResultsError(err)
 		return
 	}
 
-	opts := &GoOptions{
+	opts := &uci.GoOptions{
 		Depth:      a.Depth,
 		SearchMove: "",
 	}
@@ -156,7 +180,11 @@ func (a *Analyzer) AnalyzeFen(rchan chan *AResults) {
 		return
 	}
 
-	err = u.WaitMoveUpTo(5 * time.Second)
+	if a.MaxTimeSec <= 0 {
+		a.MaxTimeSec = DefaultAnalyzePerMoveSec
+	}
+
+	err = u.WaitMoveUpTo(time.Duration(a.MaxTimeSec) * time.Second)
 	if err != nil {
 		rchan <- AResultsError(err)
 		return

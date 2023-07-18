@@ -25,9 +25,23 @@ func AnalyzeFen(w http.ResponseWriter, r *http.Request) {
 	}
 
 	depth, err := common.Utils.ArgInt(r.URL.Query(), "depth", 15)
-	if err != nil {
+	if err != nil || depth < 1 {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("depth invalid, please enter a valid number"))
+		return
+	}
+
+	tsec, err := common.Utils.ArgInt(r.URL.Query(), "tsec", 0)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("tsec invalid, please enter a valid number"))
+		return
+	}
+
+	pvlines, err := common.Utils.ArgInt(r.URL.Query(), "lines", 0)
+	if err != nil || pvlines < 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("line invalid, please enter a valid number"))
 		return
 	}
 
@@ -40,10 +54,12 @@ func AnalyzeFen(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	fd := &analyzer.FenData{
-		Fen:      fen[0],
-		UserMove: "",
-		Depth:    depth,
-		RChannel: make(chan *analyzer.FenResponse),
+		Fen:        fen[0],
+		UserMove:   "",
+		Depth:      depth,
+		NumLines:   pvlines,
+		MaxTimeSec: tsec,
+		RChannel:   make(chan *analyzer.FenResponse),
 	}
 
 	wasSent := analyzer.AnalyzeFenChannelSender(fd)

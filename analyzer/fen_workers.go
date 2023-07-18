@@ -21,6 +21,9 @@ type FenData struct {
 	Depth    int
 
 	RChannel chan *FenResponse
+
+	MaxTimeSec int
+	NumLines   int
 }
 
 var mutex = sync.Mutex{}
@@ -69,6 +72,8 @@ func (f *FenWorker) runLoop() {
 		Utils.AdjustFenWorker(-1)
 		fmt.Printf("Fen worker started %d: %s\n", f.seq, msg.Fen)
 
+		f.analyzer.NumPVLines = msg.NumLines
+		f.analyzer.MaxTimeSec = msg.MaxTimeSec
 		f.analyzer.Depth = msg.Depth
 		f.analyzer.Fen = msg.Fen
 		f.analyzer.UserMove = msg.UserMove

@@ -23,31 +23,7 @@ http://chess.grantnet.us/index/3/
 
 */
 
-// AIRequest - The request to run the analysis
-type AIRequest struct {
-	Pgn string `json:"pgn"`
-	Fen string `json:"fen"`
-}
-
-// AIMoveData - The data for a single move in the game.
-// Contains the move string and the move score.
-type AIMoveData struct {
-	MoveStr   string `json:"moveStr"`
-	MoveScore int    `json:"MoveScore"`
-}
-
-// AIMoveResponse - The response for a single move,
-// contains all the move scores
-// moved is the actual move in the pgn
-// moves are the calculated moves
-type AIMoveResponse struct {
-	MoveNum int           `json:"moveNum"`
-	Moved   *AIMoveData   `json:"moved"`
-	Moves   []*AIMoveData `json:"moves"`
-}
-
-type AIResponse struct {
-}
+const Verbose = true
 
 type UciState int16
 
@@ -254,6 +230,7 @@ func (p *UciProcess) Start() error {
 	return err
 }
 
+// WaitOk -  Spin loop, is there a better way.
 func (p *UciProcess) WaitOk(timeout time.Duration) error {
 	st := time.Now()
 	for {
@@ -281,13 +258,19 @@ func (p *UciProcess) monitor() {
 	scanner := bufio.NewScanner(p.stdin)
 	for scanner.Scan() {
 		txt := scanner.Text()
-		fmt.Printf("Have: %s\n", txt)
+		if Verbose {
+			fmt.Printf("From Engine: %s\n", txt)
+		}
 
 		if p.callback != nil {
-			p.callback <- &UciCallback{
+			data := &UciCallback{
 				Raw:      txt,
 				BestMove: UciBestMoveParse(txt),
 				Info:     UciInfoParse(txt),
+			}
+			if data.BestMove != nil ||
+				data.Info != nil {
+				p.callback <- data
 			}
 		}
 
@@ -420,9 +403,17 @@ func (p *UciProcess) WaitMoveUpTo(timeout time.Duration) error {
 
 	}
 
-	fmt.Println("TIMEOUT!!!!")
+	if Verbose {
+		fmt.Println("Timeout waiting for the engine, sending a stop.")
+	}
+
 	p.SendStop()
-	err = p.WaitOk(500 * time.Millisecond)
+
+	err = p.WaitOk(2 * time.Second)
+	if err != nil {
+		fmt.Println("Engine did not stop after a stop has been sent.")
+	}
+
 	return err
 }
 
