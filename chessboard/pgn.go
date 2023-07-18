@@ -2,9 +2,8 @@ package ai
 
 import (
 	"fmt"
+	"github.com/samlotti/chess_anaylzer/chessboard/minilex"
 	"strings"
-
-	minilex "github.com/samlotti/chess_anaylzer/minilex"
 )
 
 const (

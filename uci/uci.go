@@ -420,6 +420,7 @@ func (p *UciProcess) WaitMoveUpTo(timeout time.Duration) error {
 
 	}
 
+	fmt.Println("TIMEOUT!!!!")
 	p.SendStop()
 	err = p.WaitOk(500 * time.Millisecond)
 	return err

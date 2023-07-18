@@ -20,6 +20,7 @@ Red: blunder  -> -.9
 type Analyzer struct {
 	Fen      string
 	UserMove string
+	Depth    int
 }
 
 func NewAnalyzer() *Analyzer {
@@ -35,8 +36,8 @@ const (
 )
 
 type ARBestMove struct {
-	BestMove string
-	Ponder   string
+	BestMove string `json:"bestMove"`
+	Ponder   string `json:"ponder"`
 }
 
 func (b *ARBestMove) String() string {
@@ -44,12 +45,12 @@ func (b *ARBestMove) String() string {
 }
 
 type ARInfo struct {
-	Depth   int      // the depth of the move
-	MPv     int      // the PV number
-	ScoreCP int      // score in centipawns  100 = one pawn, > 15000 = mate in 15001=1, - = mated in
-	MateIn  int      // 0=no mate, + = current player mates,  - other player mates
-	Moves   []string // the moves
-	Nps     int      // the nodes per sec
+	Depth   int      `json:"depth"`  // the depth of the move
+	MPv     int      `json:"pv"`     // the PV number
+	ScoreCP int      `json:"score"`  // score in centipawns  100 = one pawn, > 15000 = mate in 15001=1, - = mated in
+	MateIn  int      `json:"mateIn"` // 0=no mate, + = current player mates,  - other player mates
+	Moves   []string `json:"moves"`  // the moves
+	Nps     int      `json:"nps"`    // the nodes per sec
 }
 
 func (b *ARInfo) String() string {
@@ -146,7 +147,7 @@ func (a *Analyzer) AnalyzeFen(rchan chan *AResults) {
 	}
 
 	opts := &GoOptions{
-		Depth:      15,
+		Depth:      a.Depth,
 		SearchMove: "",
 	}
 	err = u.SendGo(opts)

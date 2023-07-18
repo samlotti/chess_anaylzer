@@ -8,17 +8,17 @@ import (
 
 // FenResponse is from worker to consumer
 type FenResponse struct {
-	RCode      RCode
-	Error      error // IF there is an error
-	Worker     int64
-	ARBestMove *ARBestMove
-	ARInfo     *ARInfo
-	Done       bool // The end of the messages
+	RCode      RCode       `json:"rcode"`
+	Error      string      `json:"error"` // IF there is an error
+	ARBestMove *ARBestMove `json:"bestMove"`
+	ARInfo     *ARInfo     `json:"info"`
+	Done       bool        `json:"done"` // The end of the messages
 }
 
 type FenData struct {
 	Fen      string
 	UserMove string
+	Depth    int
 
 	RChannel chan *FenResponse
 }
@@ -42,7 +42,8 @@ func AnalyzeFenChannelSender(fd *FenData) bool {
 }
 
 type FenWorker struct {
-	seq      int64
+	seq int64
+
 	analyzer *Analyzer
 }
 
@@ -68,6 +69,7 @@ func (f *FenWorker) runLoop() {
 		Utils.AdjustFenWorker(-1)
 		fmt.Printf("Fen worker started %d: %s\n", f.seq, msg.Fen)
 
+		f.analyzer.Depth = msg.Depth
 		f.analyzer.Fen = msg.Fen
 		f.analyzer.UserMove = msg.UserMove
 
@@ -80,7 +82,10 @@ func (f *FenWorker) runLoop() {
 				fr := &FenResponse{}
 				fr.ARInfo = m.Info
 				fr.ARBestMove = m.BestMode
-				fr.Error = m.Err
+				if m.Err != nil {
+					fr.Error = m.Err.Error()
+				}
+
 				fr.Done = m.Done
 				fr.RCode = m.RCode
 				msg.RChannel <- fr
