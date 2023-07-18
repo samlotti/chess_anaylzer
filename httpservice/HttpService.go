@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/samlotti/chess_anaylzer/analyzer"
-	"github.com/samlotti/chess_anaylzer/blipped/template"
 	"github.com/samlotti/chess_anaylzer/chessboard/common"
+	"io"
 	"log"
 	"net/http"
+	"os"
 )
 
 func BaseCtx() context.Context {
@@ -17,7 +18,16 @@ func BaseCtx() context.Context {
 }
 
 func Index(w http.ResponseWriter, r *http.Request) {
-	template.IndexRender(BaseCtx(), w)
+	// template.IndexRender(BaseCtx(), w)
+
+	file, err := os.Open("../public/index.html")
+	if err == nil {
+		defer file.Close()
+		ba, err := io.ReadAll(file)
+		if err == nil {
+			w.Write(ba)
+		}
+	}
 }
 
 // AnalyzeFen
