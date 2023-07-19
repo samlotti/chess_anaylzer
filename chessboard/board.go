@@ -26,7 +26,6 @@ const (
 	MATERIAL_SIZE = 2
 )
 
-//
 type HistoryData struct {
 	move           Move
 	castlePermFlag int
@@ -90,7 +89,8 @@ type Board struct {
 	pvArray [maxDepth]Move
 }
 
-/**
+/*
+*
 Initialize everything about the board
 */
 func (this *Board) init() {
@@ -306,33 +306,34 @@ func pieceIndex(pieceCode int, pieceNum int) int {
 	return (pieceCode * 10) + pieceNum
 }
 
-/**
- * Will check to see if this square is being attacked by the side
- *
- *   sq + 12 = up
- *   sq - 1 = left
- *   sq + 1 = right
- *   sq - 12 = down
- *
- *   +11 = upper right
- *   +9  = upper left
- *
- *   -11 = lower left
- *   -9 = lower right
- *
- *
- *  Note because of the way the board is created there is a border that has off side codes so we dont have to worry about
- *  out of bounds
- *
- *  This is called many time .. perfoamnce issue with the Integer.toInt
- *
+/*
+*
+  - Will check to see if this square is being attacked by the side
+    *
+  - sq + 12 = up
+  - sq - 1 = left
+  - sq + 1 = right
+  - sq - 12 = down
+    *
+  - +11 = upper right
+  - +9  = upper left
+    *
+  - -11 = lower left
+  - -9 = lower right
+    *
+    *
+  - Note because of the way the board is created there is a border that has off side codes so we dont have to worry about
+  - out of bounds
+    *
+  - This is called many time .. perfoamnce issue with the Integer.toInt
+    *
 
 (Running perf_test.go)
 
-     2.43s 27.65% 27.65%      2.43s 27.65%  hapticapps/modules/chess/ai.(*Board).isSqAttacked
-     1.18s 13.42% 41.07%      1.18s 13.42%  runtime.usleep
-     0.71s  8.08% 49.15%      1.27s 14.45%  hapticapps/modules/chess/ai.(*Board).movePiece
-     0.60s  6.83% 55.97%      3.91s 44.48%  hapticapps/modules/chess/ai.(*Board).makeMove
+	2.43s 27.65% 27.65%      2.43s 27.65%  hapticapps/modules/chess/ai.(*Board).isSqAttacked
+	1.18s 13.42% 41.07%      1.18s 13.42%  runtime.usleep
+	0.71s  8.08% 49.15%      1.27s 14.45%  hapticapps/modules/chess/ai.(*Board).movePiece
+	0.60s  6.83% 55.97%      3.91s 44.48%  hapticapps/modules/chess/ai.(*Board).makeMove
 
 Move/Sec:  9598542   Nodes: 119060324  Duration Sec: 12.404
 Move/Sec:  9628038   Nodes: 119060324  Duration Sec: 12.366
@@ -348,7 +349,6 @@ Move/Sec:  9225906   Nodes: 119060324  Duration Sec: 12.905
 Move/Sec:  9686001   Nodes: 119060324  Duration Sec: 12.292
 Move/Sec:  9704158   Nodes: 119060324  Duration Sec: 12.269
 Move/Sec:  9696255   Nodes: 119060324  Duration Sec: 12.279
-
 */
 func (this *Board) isSqAttacked(sq120 SQ120, side Side) bool {
 
@@ -902,13 +902,7 @@ func (this *Board) IsInCheck() bool {
 
 }
 
-/**
-Makes the move based on the input string
-FSTSp
-
-Return the actual move if it is valid.  The move is applied to the board
-If invalid, return error and NOMOVE for move
-*/
+// GetInternalMoveValueFromInputString
 func (this *Board) GetInternalMoveValueFromInputString(input string) (Move, error) {
 
 	// Reset the ply ...
@@ -926,11 +920,9 @@ func (this *Board) GetInternalMoveValueFromInputString(input string) (Move, erro
 	return NOMOVE, fmt.Errorf("Invalid move: %s", input)
 }
 
-//
 // MakeMove
 // Perform the move.
 // The input is the string version of the move as an input - for error message
-//
 func (this *Board) MakeMove(mv Move, input string) error {
 
 	// Reset the ply ...

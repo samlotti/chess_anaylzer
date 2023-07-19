@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-func BoardToFen(board * Board, numMoves int) string {
+func BoardToFen(board *Board, numMoves int) string {
 
 	var buffer bytes.Buffer
 
@@ -14,13 +14,13 @@ func BoardToFen(board * Board, numMoves int) string {
 
 	var first = true
 
-	for rank = RANK_8; rank >= RANK_1 ; rank-- {
+	for rank = RANK_8; rank >= RANK_1; rank-- {
 		if !first {
 			buffer.WriteString("/")
 		}
 		first = false
 		var blanks = 0
-		for file = FILE_A; file <= FILE_H ; file++{
+		for file = FILE_A; file <= FILE_H; file++ {
 			sq120 := FR2SQ(file, rank)
 			piece := board.pieces[sq120]
 			if piece == Piece_EMPTY {
@@ -28,7 +28,7 @@ func BoardToFen(board * Board, numMoves int) string {
 				continue
 			} else {
 				if blanks > 0 {
-					buffer.WriteString( strconv.Itoa( blanks) )
+					buffer.WriteString(strconv.Itoa(blanks))
 				}
 				// log.Print("Piece: ", piece)
 				buffer.WriteString(string(PceCharLetter[piece]))
@@ -36,45 +36,43 @@ func BoardToFen(board * Board, numMoves int) string {
 			}
 		}
 		if blanks > 0 {
-			buffer.WriteString( strconv.Itoa( blanks) )
+			buffer.WriteString(strconv.Itoa(blanks))
 		}
 	}
 
 	buffer.WriteString(" ")
-	buffer.WriteString( string(SideChar[board.side]) )
+	buffer.WriteString(string(SideChar[board.side]))
 
 	buffer.WriteString(" ")
-	if board.castlePermFlag | WKCA !=0 {
+	if board.castlePermFlag|WKCA != 0 {
 		buffer.WriteString("K")
 	}
-	if board.castlePermFlag | WQCA !=0 {
+	if board.castlePermFlag|WQCA != 0 {
 		buffer.WriteString("Q")
 	}
-	if board.castlePermFlag | BKCA !=0 {
+	if board.castlePermFlag|BKCA != 0 {
 		buffer.WriteString("k")
 	}
-	if board.castlePermFlag | BQCA !=0 {
+	if board.castlePermFlag|BQCA != 0 {
 		buffer.WriteString("q")
 	}
 
 	buffer.WriteString(" ")
 	if board.enPassantSq120 != SQUARES_NO_SQ {
-		buffer.WriteString( sqToString( board.enPassantSq120 ))
+		buffer.WriteString(sqToString(board.enPassantSq120))
 	} else {
 		buffer.WriteString("-")
 	}
 
 	// moves since last capture
 	buffer.WriteString(" ")
-	buffer.WriteString( strconv.Itoa( board.fiftyMove ))
+	buffer.WriteString(strconv.Itoa(board.fiftyMove))
 
 	// full moves
 	buffer.WriteString(" ")
-	buffer.WriteString( strconv.Itoa( numMoves/2 + 1 ))
+	buffer.WriteString(strconv.Itoa(numMoves/2 + 1))
 
-
-	return buffer.String();
-
+	return buffer.String()
 
 }
 

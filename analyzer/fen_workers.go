@@ -47,7 +47,7 @@ func AnalyzeFenChannelSender(fd *FenData) bool {
 type FenWorker struct {
 	seq int64
 
-	analyzer *Analyzer
+	analyzer *FenAnalyzer
 }
 
 var fenWorkers = make([]*FenWorker, 0)
@@ -66,7 +66,7 @@ func CreateFenWorkers(num int) {
 func (f *FenWorker) runLoop() {
 	println("Fen worker started: ", f.seq)
 	common.Utils.AdjustFenWorker(1)
-	f.analyzer = NewAnalyzer()
+	f.analyzer = NewFenAnalyzer()
 	for {
 		msg := <-fenChan
 		common.Utils.AdjustFenWorker(-1)
@@ -105,7 +105,7 @@ func (f *FenWorker) runLoop() {
 			}
 		}()
 
-		f.analyzer.AnalyzeFen(rchan)
+		f.analyzer.Analyze(rchan)
 
 		// wait for complete
 		<-dchan

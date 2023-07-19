@@ -12,7 +12,7 @@ import (
 
 //go:generate blip -dir ../template
 func main() {
-	fmt.Println("Chess Analyzer")
+	fmt.Println("Chess FenAnalyzer")
 
 	// The number of workers
 	analyzer.CreateFenWorkers(5)

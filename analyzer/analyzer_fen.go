@@ -22,8 +22,8 @@ const (
 	Verbose                  = true
 )
 
-// Analyzer - can analyze a position.
-type Analyzer struct {
+// FenAnalyzer - can analyze a position.
+type FenAnalyzer struct {
 	Fen        string
 	UserMove   string // move that is being analyzed
 	Depth      int
@@ -31,41 +31,11 @@ type Analyzer struct {
 	NumPVLines int
 }
 
-func NewAnalyzer() *Analyzer {
-	return &Analyzer{
+func NewFenAnalyzer() *FenAnalyzer {
+	return &FenAnalyzer{
 		MaxTimeSec: DefaultAnalyzePerMoveSec,
 		NumPVLines: 5,
 	}
-}
-
-type RCode string
-
-const (
-	RCODE_INFO     RCode = "info"
-	RCODE_BESTMOVE       = "bm"
-	RCODE_ERROR          = "error"
-)
-
-type ARBestMove struct {
-	BestMove string `json:"bestMove"`
-	Ponder   string `json:"ponder"`
-}
-
-func (b *ARBestMove) String() string {
-	return fmt.Sprintf("best:%s", b.BestMove)
-}
-
-type ARInfo struct {
-	Depth   int      `json:"depth"`  // the depth of the move
-	MPv     int      `json:"pv"`     // the PV number
-	ScoreCP int      `json:"score"`  // score in centipawns  100 = one pawn, > 15000 = mate in 15001=1, - = mated in
-	MateIn  int      `json:"mateIn"` // 0=no mate, + = current player mates,  - other player mates
-	Moves   []string `json:"moves"`  // the moves
-	Nps     int      `json:"nps"`    // the nodes per sec
-}
-
-func (b *ARInfo) String() string {
-	return fmt.Sprintf("%d: depth: %d Sc:%d  M:%d > %v", b.MPv, b.Depth, b.ScoreCP, b.MateIn, b.Moves)
 }
 
 // AResults - Results of the analyzer.
@@ -88,10 +58,10 @@ func AResultsError(err error) *AResults {
 	}
 }
 
-// AnalyzeFen the position
+// Analyze the position
 // Returns Best move, Your move, top X good moves.
 // Top X the least losing moves
-func (a *Analyzer) AnalyzeFen(rchan chan *AResults) {
+func (a *FenAnalyzer) Analyze(rchan chan *AResults) {
 
 	// The best move value used as the baseline.
 	// The diff between the best move and players move

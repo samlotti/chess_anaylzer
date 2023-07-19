@@ -2,33 +2,8 @@ package analyzer
 
 import (
 	"fmt"
-	ai "github.com/samlotti/chess_anaylzer/chessboard"
 	"github.com/samlotti/chess_anaylzer/chessboard/common"
 )
-
-// PgnResponse is from worker to consumer
-// Will send these over the channel
-type PgnResponse struct {
-	RCode      RCode       `json:"rcode"`
-	Error      string      `json:"error"` // IF there is an error
-	ARBestMove *ARBestMove `json:"bestMove"`
-	ARInfo     *ARInfo     `json:"info"`
-	ARYourMove *ARBestMove `json:"yourMove"`
-	MoveNum    int         `json:"moveNum"`
-	Done       bool        `json:"done"` // The end of the messages
-}
-
-type PgnData struct {
-	Pgn   string
-	Depth int
-
-	RChannel chan *PgnResponse
-
-	MaxTimeSec int
-	NumLines   int
-}
-
-var pgnChan = make(chan *PgnData, 1)
 
 // AnalyzePgnChannelSender - analyze this data.
 // Returns false if the queue are busy
@@ -46,7 +21,7 @@ func AnalyzePgnChannelSender(fd *PgnData) bool {
 
 type PgnWorker struct {
 	seq      int64
-	analyzer *Analyzer
+	analyzer *PgnAnalyzer
 }
 
 var pgnWorkers = make([]*PgnWorker, 0)
@@ -65,7 +40,7 @@ func CreatePgnWorkers(num int) {
 func (f *PgnWorker) runLoop() {
 	println("Pgn worker started: ", f.seq)
 	common.Utils.AdjustPgnWorker(1)
-	f.analyzer = NewAnalyzer()
+	f.analyzer = NewPgnAnalyzer()
 	for {
 		msg := <-pgnChan
 
@@ -74,70 +49,8 @@ func (f *PgnWorker) runLoop() {
 			fmt.Printf("Pgn worker started %d: %s\n", f.seq, msg.Pgn)
 		}
 
-		f.doAnalyze(msg)
+		f.analyzer.DoAnalyze(msg)
 		common.Utils.AdjustPgnWorker(1)
 
 	}
-}
-
-func (f *PgnWorker) doAnalyze(msg *PgnData) {
-
-	/***
-	Need to loop through each move, passing the fen of the board
-	*/
-
-	wrapper := ai.NewPgnWrapper(msg.Pgn)
-	err := wrapper.Parse()
-	if err != nil {
-		msg.RChannel <- &PgnResponse{
-			RCode: RCODE_ERROR,
-			Error: err.Error(),
-			Done:  true,
-		}
-		return
-	}
-
-	msg.RChannel <- &PgnResponse{
-		RCode: RCODE_ERROR,
-		Error: fmt.Sprintf("Code Not complete! moves %v", wrapper.Moves),
-		Done:  true,
-	}
-	return
-
-	f.analyzer.NumPVLines = msg.NumLines
-	f.analyzer.MaxTimeSec = msg.MaxTimeSec
-	f.analyzer.Depth = msg.Depth
-	f.analyzer.Fen = msg.Pgn
-	// f.analyzer.UserMove = msg.UserMove
-
-	dchan := make(chan struct{}, 10)
-	rchan := make(chan *AResults, 10)
-	go func() {
-		for {
-			m := <-rchan
-
-			fr := &PgnResponse{}
-			fr.ARInfo = m.Info
-			fr.ARBestMove = m.BestMode
-			if m.Err != nil {
-				fr.Error = m.Err.Error()
-			}
-
-			fr.Done = m.Done
-			fr.RCode = m.RCode
-			msg.RChannel <- fr
-
-			if m.Done {
-				dchan <- struct{}{}
-				return
-			}
-
-		}
-	}()
-
-	f.analyzer.AnalyzeFen(rchan)
-
-	// wait for complete
-	<-dchan
-
 }

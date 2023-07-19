@@ -6,7 +6,7 @@ import (
 )
 import "github.com/stretchr/testify/assert"
 
-func collectResults(in chan *AResults) []*AResults {
+func collectFenResults(in chan *AResults) []*AResults {
 
 	r := make([]*AResults, 0)
 
@@ -23,7 +23,7 @@ func collectResults(in chan *AResults) []*AResults {
 
 func TestAnalyzer1(t *testing.T) {
 
-	a := NewAnalyzer()
+	a := NewFenAnalyzer()
 	assert.NotNil(t, a)
 	//
 	//a.Fen = "2q1rr1k/3bbnnp/p2p1pp1/2pPp3/PpP1P1P1/1P2BNNP/2BQ1PRK/7R b - -"
@@ -38,7 +38,7 @@ func TestAnalyzer1(t *testing.T) {
 	a.UserMove = ""
 
 	rchan := make(chan *AResults, 10)
-	go a.AnalyzeFen(rchan)
-	ar := collectResults(rchan)
+	go a.Analyze(rchan)
+	ar := collectFenResults(rchan)
 	assert.NotNil(t, ar)
 }
