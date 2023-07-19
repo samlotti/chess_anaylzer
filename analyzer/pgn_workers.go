@@ -2,6 +2,7 @@ package analyzer
 
 import (
 	"fmt"
+	ai "github.com/samlotti/chess_anaylzer/chessboard"
 	"github.com/samlotti/chess_anaylzer/chessboard/common"
 )
 
@@ -82,12 +83,23 @@ func (f *PgnWorker) runLoop() {
 func (f *PgnWorker) doAnalyze(msg *PgnData) {
 
 	/***
-	Need to loop thru each move, passing the fen of the board
+	Need to loop through each move, passing the fen of the board
 	*/
+
+	wrapper := ai.NewPgnWrapper(msg.Pgn)
+	err := wrapper.Parse()
+	if err != nil {
+		msg.RChannel <- &PgnResponse{
+			RCode: RCODE_ERROR,
+			Error: err.Error(),
+			Done:  true,
+		}
+		return
+	}
 
 	msg.RChannel <- &PgnResponse{
 		RCode: RCODE_ERROR,
-		Error: "Code Not complete!",
+		Error: fmt.Sprintf("Code Not complete! moves %v", wrapper.Moves),
 		Done:  true,
 	}
 	return
