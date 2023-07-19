@@ -51,3 +51,47 @@ Nf2 42. g4 Bd3 43. Re6 1/2-1/2
 	ar := collectPgnResults(rchan)
 	assert.NotNil(t, ar)
 }
+
+func TestPgn2(t *testing.T) {
+
+	a := &PgnData{}
+	assert.NotNil(t, a)
+	a.Pgn =
+		`
+[Event "Superbet Rapid 2023"]
+[Site "Warsaw POL"]
+[Date "2023.05.21"]
+[Round "3"]
+[White "So,W"]
+[Black "Rapport,R"]
+[Result "1-0"]
+[WhiteElo "2760"]
+[BlackElo "2745"]
+[EventDate "2023.05.19"]
+[ECO "A61"]
+
+1. d4 Nf6 2. c4 e6 3. Nf3 c5 4. d5 d6 5. Nc3 exd5 6. cxd5 g6 7. Bf4 Bg7 8.
+e3 O-O 9. h3 Ne8 10. Be2 Nd7 11. O-O Ne5 12. Nd2 f5 13. Bh2 Nc7 14. a4 Qe7
+15. Re1 Bd7 16. Qb3 Na6 17. Qxb7 Nb4 18. Bxe5 Bxe5 19. Bb5 Rfd8 20. Red1
+Rab8 21. Qc7 Rbc8 22. Qb7 Rb8 23. Qc7 Rbc8 24. Qa5 a6 25. Bxd7 Rxd7 26. Nc4
+Rb8 27. Na2 Ra7 28. Nxb4 Rxb4 29. Nxe5 Qxe5 30. Qd8+ Kg7 31. Rd2 Rab7 32.
+Qa8 Rxb2 33. Rxb2 Qxb2 34. Rf1 c4 35. Qxa6 c3 36. Kh2 c2 37. Qc4 Rb4 38.
+Qc7+ Kh6 39. Qxd6 Rc4 40. Qf8+ Kh5 41. Qe7 h6 42. d6 c1=Q 43. Rxc1 Rxc1 44.
+g4+ fxg4 45. hxg4+ Kxg4 46. Qe4+ Kg5 47. Qf4+ Kh5 48. d7 Qd2 49. Qf3+ Kg5
+50. Qf4+ Kh5 51. Qe5+ g5 52. Qe8+ Kh4 53. Qe4+ Kh5 54. Qe8+ Kh4 55. Qf8
+Rh1+ 56. Kxh1 Qxd7 57. Qxh6+ Kg4 58. Qa6 Kf3 59. Qf6+ Ke2 60. Kh2 Qh7+ 61.
+Kg2 Qe4+ 62. f3 Qxa4 63. Qxg5 Qa2 64. e4 Qb3 65. Qg3 Qe6 66. e5 Ke3 67. f4+
+Kd4 68. Qf2+ Ke4 69. Qf3+ Kd4 70. Kf2 Qf5 71. Qd1+ Ke4 72. Qf3+ Kd4 73. Kg3
+Qg6+ 74. Qg4 Qd3+ 75. Qf3 Qg6+ 76. Qg4 Qd3+ 77. Kh4 Qh7+ 78. Qh5 Qe7+ 79.
+Kg4 Qe6+ 80. Qf5 Qg8+ 81. Qg5 Qe6+ 82. f5 Qa2 83. Qf4+ Kd5 84. Kg5 Qb2 85.
+f6 Qg2+ 86. Kh6 1-0
+`
+
+	a.NumLines = 5
+	rchan := make(chan *PgnResponse, 10)
+	a.RChannel = rchan
+	pa := NewPgnAnalyzer()
+	go pa.DoAnalyze(a)
+	ar := collectPgnResults(rchan)
+	assert.NotNil(t, ar)
+}

@@ -67,17 +67,10 @@ func (f *PgnAnalyzer) DoAnalyze(msg *PgnData) {
 	} else {
 		ai.ParseFen(brd, ai.StartFen)
 	}
-	for i, m := range wrapper.Moves {
-		mv, err := brd.GetInternalMoveValueFromInputString(m)
-		if err != nil {
-			msg.RChannel <- &PgnResponse{
-				RCode: RCODE_ERROR,
-				Error: err.Error(),
-				Done:  true,
-			}
-			return
-		}
-		err = brd.MakeMove(mv, m)
+	for i, mv := range wrapper.InternalMoves {
+
+		ims := ai.MoveToInputString(mv)
+		err = brd.MakeMove(mv, ims)
 		if err != nil {
 			msg.RChannel <- &PgnResponse{
 				RCode: RCODE_ERROR,

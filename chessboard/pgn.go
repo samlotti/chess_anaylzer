@@ -70,11 +70,12 @@ func AddPgnLexMap(lexer *minilex.MiniLexer) error {
 }
 
 type PgnWrapper struct {
-	lex        *minilex.MiniLexer
-	Moves      []string
-	Attributes map[string]string
-	board      *Board
-	StartFen   string
+	lex           *minilex.MiniLexer
+	Moves         []string
+	InternalMoves []Move
+	Attributes    map[string]string
+	board         *Board
+	StartFen      string
 }
 
 func NewPgnWrapper(pgn string) *PgnWrapper {
@@ -250,6 +251,7 @@ func (p *PgnWrapper) applyMoveSAN(sanMove string, debug bool) error {
 		if san == sanMove {
 			p.board.MakeMove(vm, sanMove)
 
+			p.InternalMoves = append(p.InternalMoves, vm)
 			p.Moves = append(p.Moves, MoveToString(vm))
 
 			return nil
