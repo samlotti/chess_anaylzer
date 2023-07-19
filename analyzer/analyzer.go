@@ -157,7 +157,6 @@ func (a *Analyzer) AnalyzeFen(rchan chan *AResults) {
 				if Verbose {
 					println("analyzer done")
 				}
-
 				return
 			}
 		}

@@ -1,34 +1,12 @@
 package httpservice
 
 import (
-	"context"
 	"encoding/json"
 	"github.com/samlotti/chess_anaylzer/analyzer"
 	"github.com/samlotti/chess_anaylzer/chessboard/common"
-	"io"
 	"log"
 	"net/http"
-	"os"
 )
-
-func BaseCtx() context.Context {
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, "title", "Chess AI")
-	return ctx
-}
-
-func Index(w http.ResponseWriter, r *http.Request) {
-	// template.IndexRender(BaseCtx(), w)
-
-	file, err := os.Open("../public/index.html")
-	if err == nil {
-		defer file.Close()
-		ba, err := io.ReadAll(file)
-		if err == nil {
-			w.Write(ba)
-		}
-	}
-}
 
 // AnalyzeFen
 // http://localhost:8181/chess/ai/fen?fen=2q1rr1k/3bbnnp/p2p1pp1/2pPp3/PpP1P1P1/1P2BNNP/2BQ1PRK/7R%20b%20-%20-
@@ -95,15 +73,6 @@ func AnalyzeFen(w http.ResponseWriter, r *http.Request) {
 
 		json.NewEncoder(w).Encode(fresp)
 
-		//if fresp.RCode == analyzer.RCODE_ERROR {
-		//	w.Write([]byte("error processing request"))
-		//	log.Printf("error %s\n", fresp.Error)
-		//	return
-		//} else {
-		//	fmt.Printf(">>> %+v\n", fresp)
-		//	w.Write([]byte(fmt.Sprintf("%+v\n", fresp)))
-		//	w.Write([]byte(fmt.Sprintf("Worker: %d\n", fresp.Worker)))
-		//}
 		if fresp.Done {
 			//w.Write([]byte("request completed"))
 			return

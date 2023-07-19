@@ -16,6 +16,7 @@ func main() {
 
 	// The number of workers
 	analyzer.CreateFenWorkers(5)
+	analyzer.CreatePgnWorkers(5)
 
 	Environment.EnginePath = "../engines/"
 
@@ -33,9 +34,11 @@ func main() {
 	//http.HandleFunc("/users/listActive", UListActive)
 	//http.HandleFunc("/users/view/", UView)
 
-	http.HandleFunc("/", httpservice.Index)
-
+	http.HandleFunc("/chess/ai/pgn", httpservice.AnalyzePgn)
 	http.HandleFunc("/chess/ai/fen", httpservice.AnalyzeFen)
+
+	http.Handle("/", http.FileServer(http.Dir("../public")))
+	// http.HandleFunc("/", httpservice.Index)
 
 	if err := http.ListenAndServe(":8181", nil); err != nil {
 		log.Fatal(err)

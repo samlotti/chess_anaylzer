@@ -70,7 +70,9 @@ func (f *FenWorker) runLoop() {
 	for {
 		msg := <-fenChan
 		common.Utils.AdjustFenWorker(-1)
-		fmt.Printf("Fen worker started %d: %s\n", f.seq, msg.Fen)
+		if Verbose {
+			fmt.Printf("Fen worker started %d: %s\n", f.seq, msg.Fen)
+		}
 
 		f.analyzer.NumPVLines = msg.NumLines
 		f.analyzer.MaxTimeSec = msg.MaxTimeSec

@@ -12,11 +12,13 @@ const Verbose = true
 type utils struct {
 	seq            int64
 	availFenWorker int64
+	availPgnWorker int64
 }
 
 var Utils = &utils{
 	seq:            0,
 	availFenWorker: 0,
+	availPgnWorker: 0,
 }
 
 func (u *utils) NextSeq() int64 {
@@ -24,10 +26,24 @@ func (u *utils) NextSeq() int64 {
 }
 
 func (u *utils) debug() {
-	i := atomic.LoadInt64(&u.availFenWorker)
 	if Verbose {
-		fmt.Printf("Num workers: %d\n", i)
+		p := atomic.LoadInt64(&u.availPgnWorker)
+		f := atomic.LoadInt64(&u.availFenWorker)
+		fmt.Printf("Num workers: Pgn %d,  Fen: %d\n", p, f)
 	}
+}
+
+// AdjustPgnWorker -- inc or dec the number of available fen workers
+func (u *utils) AdjustPgnWorker(num int64) {
+	atomic.AddInt64(&u.availPgnWorker, num)
+	u.debug()
+}
+
+// GetPgnWorkers - the number of available fen workers.
+func (u *utils) GetPgnWorkers() int64 {
+	r := atomic.LoadInt64(&u.availPgnWorker)
+	u.debug()
+	return r
 }
 
 // AdjustFenWorker -- inc or dec the number of available fen workers
@@ -54,4 +70,13 @@ func (u *utils) ArgInt(data url.Values, key string, dflt int) (int, error) {
 	}
 	ival, err := strconv.Atoi(string(val[0]))
 	return ival, err
+}
+
+func (u *utils) AToI(val string, dflt int) (int, error) {
+	if len(val) == 0 {
+		return dflt, nil
+	}
+	ival, err := strconv.Atoi(val)
+	return ival, err
+
 }
