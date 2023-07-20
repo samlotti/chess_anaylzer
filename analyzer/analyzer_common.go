@@ -6,6 +6,7 @@ const (
 	RCODE_INFO     RCode = "info"
 	RCODE_BESTMOVE       = "bm"
 	RCODE_ERROR          = "error"
+	RCODE_DONE           = "done"
 )
 
 type RCode string

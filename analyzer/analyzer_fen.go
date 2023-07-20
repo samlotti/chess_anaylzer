@@ -25,6 +25,7 @@ const (
 // FenAnalyzer - can analyze a position.
 type FenAnalyzer struct {
 	Fen        string
+	MoveNum    int    // halfmove count
 	UserMove   string // move that is being analyzed
 	Depth      int
 	MaxTimeSec int

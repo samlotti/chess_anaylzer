@@ -83,24 +83,59 @@ func (f *PgnAnalyzer) DoAnalyze(msg *PgnData) {
 		fmt.Printf("%s \n", fen)
 	}
 
-	msg.RChannel <- &PgnResponse{
-		RCode: RCODE_ERROR,
-		Error: fmt.Sprintf("Code Not complete! moves %v", wrapper.Moves),
-		Done:  true,
-	}
-
-	if 1 == 1 {
-		return
-	}
+	//msg.RChannel <- &PgnResponse{
+	//	RCode: RCODE_ERROR,
+	//	Error: fmt.Sprintf("Code Not complete! moves %v", wrapper.Moves),
+	//	Done:  true,
+	//}
 
 	var fenAnalyzer = NewFenAnalyzer()
 
-	fenAnalyzer.NumPVLines = msg.NumLines
-	fenAnalyzer.MaxTimeSec = msg.MaxTimeSec
-	fenAnalyzer.Depth = msg.Depth
-	fenAnalyzer.Fen = msg.Pgn
-	// f.analyzer.UserMove = msg.UserMove
+	brd = ai.NewBoard()
+	if len(wrapper.StartFen) > 0 {
+		ai.ParseFen(brd, wrapper.StartFen)
+	} else {
+		ai.ParseFen(brd, ai.StartFen)
+	}
 
+	// The initial board fen
+	fen := ai.BoardToFen(brd, 0)
+	for i, mv := range wrapper.InternalMoves {
+
+		ims := ai.MoveToInputString(mv)
+
+		fenAnalyzer.NumPVLines = msg.NumLines
+		fenAnalyzer.MaxTimeSec = msg.MaxTimeSec
+		fenAnalyzer.Depth = msg.Depth
+		fenAnalyzer.Fen = fen
+		fenAnalyzer.UserMove = ims
+		fenAnalyzer.MoveNum = i + 1
+
+		fmt.Printf("In: %s = %s \n", ims, fen)
+		f.doAnalyzeThisMove(fenAnalyzer)
+		// fmt.Printf("Out: %s = %s \n", ims, fen)
+
+		err = brd.MakeMove(mv, ims)
+		if err != nil {
+			msg.RChannel <- &PgnResponse{
+				RCode: RCODE_ERROR,
+				Error: err.Error(),
+				Done:  true,
+			}
+			return
+		}
+
+		fen = ai.BoardToFen(brd, i)
+
+	}
+	msg.RChannel <- &PgnResponse{
+		RCode: RCODE_DONE,
+		Done:  true,
+	}
+
+}
+
+func (f *PgnAnalyzer) doAnalyzeThisMove(fenAnalyzer *FenAnalyzer) {
 	dchan := make(chan struct{}, 10)
 	rchan := make(chan *AResults, 10)
 	go func() {
@@ -116,7 +151,8 @@ func (f *PgnAnalyzer) DoAnalyze(msg *PgnData) {
 
 			fr.Done = m.Done
 			fr.RCode = m.RCode
-			msg.RChannel <- fr
+			fmt.Printf("send from fen: %+v\n", fr)
+			// msg.RChannel <- fr
 
 			if m.Done {
 				dchan <- struct{}{}

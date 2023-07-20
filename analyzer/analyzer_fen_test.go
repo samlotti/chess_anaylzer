@@ -34,7 +34,8 @@ func TestAnalyzer1(t *testing.T) {
 	//a.Fen = "rn3rk1/pbppq1pp/1p2pb2/4N2Q/3PN3/3B4/PPP2PPP/R3K2R w KQ - 7 11"
 	//a.Fen = "2r3k1/p4p2/3Rp2p/1p2P1pK/8/1P4P1/P3Q2P/1q6 b - - 0 1"
 	//a.Fen = "6k1/3b3r/1p1p4/p1n2p2/1PPNpP1q/P3Q1p1/1R1RB1P1/5K2 b - - 0-1"
-	a.Fen = "2r3k1/p4p2/3Rp2p/1p2P1pK/8/1P4P1/P3Q2P/1q6 b - - 0 1"
+	// a.Fen = "2r3k1/p4p2/3Rp2p/1p2P1pK/8/1P4P1/P3Q2P/1q6 b - - 0 1"
+	a.Fen = "8/8/5P2/3kP1K1/5Q2/8/6q1/8 w KQkq - 1 85"
 	a.UserMove = ""
 
 	rchan := make(chan *AResults, 10)
