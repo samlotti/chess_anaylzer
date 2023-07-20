@@ -214,7 +214,7 @@ func (this *Board) printSquareAttacked(chkSide Side) {
 	fmt.Println("    a  b  c  d  e  f  g  h")
 }
 
-func (this *Board) printBoard(msg string) {
+func (this *Board) PrintBoard(msg string) {
 	fmt.Print("\nGame Board: ", msg, "\n\n")
 	fmt.Println("EP:", this.enPassantSq120, " 8x8:", sqToString(this.enPassantSq120))
 
@@ -673,7 +673,7 @@ func (brd *Board) checkBoard() bool {
 	}
 
 	if !ok {
-		brd.printBoard("Board at time of check failure")
+		brd.PrintBoard("Board at time of check failure")
 		panic("Errors in the check board")
 	}
 	//        println("Checkboard: ${ok}")
@@ -703,9 +703,9 @@ func (brd *Board) makeMove(move Move) bool {
 	// Remove the enpassant capture
 	if move&(MFLAG_EnPassant) != 0 {
 		if brd.side == Color_WHITE {
-			brd.clearPiece((to120 - 10))
+			brd.clearPiece(to120 - 10)
 		} else {
-			brd.clearPiece((to120 + 10))
+			brd.clearPiece(to120 + 10)
 		}
 		// (1)
 	} else {
@@ -737,10 +737,15 @@ func (brd *Board) makeMove(move Move) bool {
 	historyData.enPassSq120 = brd.enPassantSq120
 	historyData.castlePermFlag = brd.castlePermFlag
 
-	brd.hashCastle()
+	brd.hashCastle() // <-- remove old
 	// handles rook moves, rook capture, king move
+	//old := brd.castlePermFlag
 	brd.castlePermFlag = brd.castlePermFlag & (CastlePerm[from120]) & (CastlePerm[to120])
-	brd.hashCastle()
+	//if old != brd.castlePermFlag {
+	//	fmt.Printf("Castle change: %s\n", MoveToInputString(move))
+	//}
+	//fmt.Printf("CP: %d \n", brd.castlePermFlag)
+	brd.hashCastle() // <-- add new
 
 	brd.enPassantSq120 = SQUARES_NO_SQ
 

@@ -65,11 +65,11 @@ func TestMakeMove(t *testing.T) {
 	b.makeMove(b.moveList[0]) // sb a2 - a3
 	b.checkBoard()
 
-	b.printBoard("Made a move")
+	b.PrintBoard("Made a move")
 	b.checkBoard()
 
 	b.takeMove()
-	b.printBoard("Take back a move")
+	b.PrintBoard("Take back a move")
 	b.checkBoard()
 
 	//
@@ -86,7 +86,7 @@ func genAndPrint(fen string) *Board {
 	b := NewBoard()
 	ParseFen(b, fen)
 	generateMoves(b)
-	b.printBoard(fen)
+	b.PrintBoard(fen)
 	// b.printMoveList()
 	// b.checkBoard()
 	return b

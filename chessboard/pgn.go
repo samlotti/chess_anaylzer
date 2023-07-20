@@ -258,7 +258,7 @@ func (p *PgnWrapper) applyMoveSAN(sanMove string, debug bool) error {
 		}
 	}
 
-	p.board.printBoard(fmt.Sprintf("Move not found for: %s", sanMove))
+	p.board.PrintBoard(fmt.Sprintf("Move not found for: %s", sanMove))
 	//if !debug {
 	//	// So we can see it.
 	//	p.applyMoveSAN(sanMove, true)

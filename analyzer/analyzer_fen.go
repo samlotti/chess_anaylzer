@@ -67,8 +67,8 @@ func (a *FenAnalyzer) Analyze(rchan chan *AResults) {
 	// The best move value used as the baseline.
 	// The diff between the best move and players move
 	// Is used determine the response of inaccuracy / blunder ...
-
 	u, err := uci.UciManager().GetUci("zahak")
+	// u, err := uci.UciManager().GetUci("stockfish")
 	if err != nil {
 		rchan <- AResultsError(err)
 		return
@@ -149,6 +149,7 @@ func (a *FenAnalyzer) Analyze(rchan chan *AResults) {
 	opts := &uci.GoOptions{
 		Depth:      a.Depth,
 		SearchMove: "",
+		// Fen:        a.Fen,
 	}
 	err = u.SendGo(opts)
 	if err != nil {

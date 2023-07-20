@@ -146,27 +146,27 @@ func moveToDebugString(move Move) string {
 //	return false
 //}
 
-/**
+/*
+*
 
- // Where the move starts at a given Depth. (?? index lookup ??)
-	 moveListStart[] -> index for the first move at a given ply
+	 // Where the move starts at a given Depth. (?? index lookup ??)
+		 moveListStart[] -> index for the first move at a given ply
 
- // The moves at each ply (searching)
-	moveList[index]
+	 // The moves at each ply (searching)
+		moveList[index]
 
-	So movelist contains a block of all move ply0, then block all moves ply 1 ....
-	moveliststart just tells the index at the ply for the beginning of the moves.
+		So movelist contains a block of all move ply0, then block all moves ply 1 ....
+		moveliststart just tells the index at the ply for the beginning of the moves.
 
-	dynamic index structure.  as moves added to a ply, increments the start of the next ply to point to current pos + 1
-  for (i in moveListStart(ply)..moveListStart(ply+1)-1) {
-	 processmove.
-  }
-
+		dynamic index structure.  as moves added to a ply, increments the start of the next ply to point to current pos + 1
+	  for (i in moveListStart(ply)..moveListStart(ply+1)-1) {
+		 processmove.
+	  }
 */
 func generateMoves(brd *Board) {
 
 	if DEBUG {
-		brd.printBoard("Generate moves")
+		brd.PrintBoard("Generate moves")
 	}
 
 	brd.moveListStart[brd.ply+1] = brd.moveListStart[brd.ply]
@@ -384,13 +384,14 @@ func generateMoves(brd *Board) {
 
 }
 
-/**
+/*
+*
 Clone of generate moves... but only does captures
 */
 func generateCaptureMoves(brd *Board) {
 
 	if DEBUG {
-		brd.printBoard("Generate moves")
+		brd.PrintBoard("Generate moves")
 	}
 	brd.moveListStart[brd.ply+1] = brd.moveListStart[brd.ply]
 

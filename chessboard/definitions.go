@@ -6,8 +6,6 @@ import (
 	"time"
 )
 
-//
-//
 const DEBUG = false
 
 // ----------- CONSTANTS FOR CHESS AI SERVER WITH LIMITED USERS -------------
@@ -63,7 +61,8 @@ const PVENTRIES = 10000
 const INFINITE = 30000
 const MATE = 29000
 
-/**
+/*
+*
 The piece and values
 */
 const EMPTY_SQ120 SQ120 = 0
@@ -93,7 +92,8 @@ var mvvLvaValue = []int{
 	0, 100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600,
 }
 
-/**
+/*
+*
 File constants
 */
 const ( // iota is reset to 0
@@ -108,7 +108,8 @@ const ( // iota is reset to 0
 	FILE_NONE
 )
 
-/**
+/*
+*
 Rank constants
 */
 const ( // iota is reset to 0
@@ -339,24 +340,24 @@ var PieceSlides = []bool{
 }
 
 /*
- This value bitwise anded to the castle permission setting.
- Basically will remove the bits to disable various castling.
- The rook and king positions line up with the bit removals
- to reflect the loss of castle permissions
- 7 = 0111 So Black queenside is removed if the rook is to move
- 3 = 0011 So Black queenside and kingside permissions are removed.
+This value bitwise anded to the castle permission setting.
+Basically will remove the bits to disable various castling.
+The rook and king positions line up with the bit removals
+to reflect the loss of castle permissions
+7 = 0111 So Black queenside is removed if the rook is to move
+3 = 0011 So Black queenside and kingside permissions are removed.
 */
 var CastlePerm = []int{
 	15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
 	15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
-	15, 13, 15, 15, 15, 12, 15, 15, 14, 15,
+	15, 13, 15, 15, 15, 12, 15, 15, 14, 15, // row
 	15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
 	15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
 	15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
 	15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
 	15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
 	15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
-	15, 7, 15, 15, 15, 3, 15, 15, 11, 15,
+	15, 7, 15, 15, 15, 3, 15, 15, 11, 15, // row
 	15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
 	15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
 }
@@ -394,7 +395,8 @@ var SideKey = RAND_32()
 // 16 different flag values
 var CastleKeys = [16]int{0}
 
-/**
+/*
+*
 Mapping that will tell us the file for each square in our 120 grid
 */
 var filesBrd [] /*BRD_SQ_NUM*/ File
@@ -449,7 +451,8 @@ func initFileRanks() {
 
 }
 
-/**
+/*
+*
 This is static, done once
 */
 func init() {

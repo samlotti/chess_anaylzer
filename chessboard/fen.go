@@ -44,17 +44,26 @@ func BoardToFen(board *Board, numMoves int) string {
 	buffer.WriteString(string(SideChar[board.side]))
 
 	buffer.WriteString(" ")
-	if board.castlePermFlag|WKCA != 0 {
+
+	cdash := true
+	if board.castlePermFlag&WKCA != 0 {
 		buffer.WriteString("K")
+		cdash = false
 	}
-	if board.castlePermFlag|WQCA != 0 {
+	if board.castlePermFlag&WQCA != 0 {
 		buffer.WriteString("Q")
+		cdash = false
 	}
-	if board.castlePermFlag|BKCA != 0 {
+	if board.castlePermFlag&BKCA != 0 {
 		buffer.WriteString("k")
+		cdash = false
 	}
-	if board.castlePermFlag|BQCA != 0 {
+	if board.castlePermFlag&BQCA != 0 {
 		buffer.WriteString("q")
+		cdash = false
+	}
+	if cdash {
+		buffer.WriteString("-")
 	}
 
 	buffer.WriteString(" ")

@@ -12,12 +12,12 @@ func TestInitialPosition(t *testing.T) {
 
 	brd := NewBoard()
 	ParseFen(brd, fen)
-	brd.printBoard( fen )
+	brd.PrintBoard(fen)
 	// brd.PrintPieceList()
 	brd.isSqAttacked(fr_to_SQ120(1, 1), brd.side)
 	brd.printSquareAttacked(brd.side)
 
-	moves := make([]Move,0)
+	moves := make([]Move, 0)
 	var revfen = BoardToFen(brd, len(moves))
 	assert.Equal(t, fen, revfen)
 
@@ -29,14 +29,14 @@ func TestInitialPositionE3(t *testing.T) {
 
 	brd := NewBoard()
 	ParseFen(brd, fen)
-	brd.printBoard("TestInitialPositionE3")
+	brd.PrintBoard("TestInitialPositionE3")
 
 	// brd.PrintPieceList()
 	att := brd.isSqAttacked(fr_to_SQ120(1, 1), brd.side)
 	fmt.Println("Sq Attacked: ", att)
 	brd.printSquareAttacked(brd.side)
 
-	moves := make([]Move,0)
+	moves := make([]Move, 0)
 	var revfen = BoardToFen(brd, len(moves))
 	assert.Equal(t, fen, revfen)
 
@@ -56,7 +56,7 @@ func TestSQAttacked1(t *testing.T) {
 
 	brd := NewBoard()
 	ParseFen(brd, "7k/8/8/p7/1P6/8/8/7K w - - 0 1")
-	brd.printBoard("TestSQAttacked1")
+	brd.PrintBoard("TestSQAttacked1")
 
 	// brd.PrintPieceList()
 	att := brd.isSqAttacked(fr_to_SQ120(1, 1), brd.side)
@@ -87,7 +87,7 @@ func TestSQAttacked2(t *testing.T) {
 
 	brd := NewBoard()
 	ParseFen(brd, "q3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1")
-	brd.printBoard("TestSQAttacked2")
+	brd.PrintBoard("TestSQAttacked2")
 
 	// brd.PrintPieceList()
 	att := brd.isSqAttacked(fr_to_SQ120(1, 1), brd.side)
@@ -121,7 +121,7 @@ func TestSQAttackedKnight(t *testing.T) {
 
 	brd := NewBoard()
 	ParseFen(brd, "q3k2r/8/8/3N4/8/8/8/R3K2R b KQkq - 0 1")
-	brd.printBoard("TestSQAttackedKnight")
+	brd.PrintBoard("TestSQAttackedKnight")
 
 	// brd.PrintPieceList()
 	att := brd.isSqAttacked(fr_to_SQ120(1, 1), brd.side)

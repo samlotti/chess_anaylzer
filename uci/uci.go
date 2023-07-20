@@ -258,17 +258,20 @@ func (p *UciProcess) monitor() {
 	}()
 	scanner := bufio.NewScanner(p.stdin)
 	for scanner.Scan() {
+		//fmt.Println("Waiting for engine!")
 		txt := scanner.Text()
 		if Verbose {
 			fmt.Printf("From Engine: %s\n", txt)
 		}
 
 		if p.callback != nil {
+			// fmt.Println("sending to callback")
 			data := &UciCallback{
 				Raw:      txt,
 				BestMove: UciBestMoveParse(txt),
 				Info:     UciInfoParse(txt),
 			}
+			// fmt.Println("done sending")
 
 			if strings.Contains(txt, "invalid") {
 				data.Err = fmt.Errorf("%s", txt)
@@ -302,10 +305,12 @@ func (p *UciProcess) monitor() {
 		}
 
 	}
+	// fmt.Println("Scanner exited!")
 }
 
 // send - Sends a line to the chess engine.
 func (p *UciProcess) send(line string) error {
+	fmt.Printf("==== Send: %s\n", line)
 	_, err := fmt.Fprint(p.stdout, line)
 	if err != nil {
 		return err
@@ -314,6 +319,7 @@ func (p *UciProcess) send(line string) error {
 	if err != nil {
 		return err
 	}
+	// fmt.Println("Sent!")
 	return nil
 }
 
@@ -356,6 +362,7 @@ func (p *UciProcess) checkReady() error {
 type GoOptions struct {
 	Depth      int
 	SearchMove string
+	//Fen        string
 }
 
 func NewGoOptions() *GoOptions {
@@ -371,13 +378,19 @@ func (p *UciProcess) SendGo(opts *GoOptions) error {
 
 	p.SetEState(ECalculating)
 
-	str := "go "
+	str := "go"
+
 	if opts.Depth > 0 {
 		str = fmt.Sprintf("%s depth %d", str, opts.Depth)
 	}
+
 	if len(opts.SearchMove) > 0 {
 		str = fmt.Sprintf("%s searchmoves %s", str, opts.SearchMove)
 	}
+
+	//if len(opts.Fen) > 0 {
+	//	str = fmt.Sprintf("%s position fen %s ", str, opts.Fen)
+	//}
 
 	return p.send(str)
 

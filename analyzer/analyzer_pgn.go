@@ -81,8 +81,10 @@ func (f *PgnAnalyzer) DoAnalyze(msg *PgnData) {
 		}
 		fen := ai.BoardToFen(brd, i)
 		fmt.Printf("%s \n", fen)
-	}
 
+		// brd.PrintBoard("dd")
+	}
+	//
 	//msg.RChannel <- &PgnResponse{
 	//	RCode: RCODE_ERROR,
 	//	Error: fmt.Sprintf("Code Not complete! moves %v", wrapper.Moves),
