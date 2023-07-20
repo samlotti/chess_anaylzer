@@ -89,7 +89,7 @@ f6 Qg2+ 86. Kh6 1-0
 
 	a.NumLines = 5
 	a.MaxTimeSec = 1
-	a.Depth = 5
+	a.Depth = 2
 	rchan := make(chan *PgnResponse, 10)
 	a.RChannel = rchan
 	pa := NewPgnAnalyzer()

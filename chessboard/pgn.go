@@ -235,7 +235,7 @@ func (p *PgnWrapper) loadMoves() error {
 }
 
 func (p *PgnWrapper) applyMoveSAN(sanMove string, debug bool) error {
-	fmt.Printf("Move: %s\n", sanMove)
+	// fmt.Printf("Move: %s\n", sanMove)
 
 	// Get rid of check indicator
 	sanMove = strings.TrimSuffix(sanMove, "+")

@@ -11,6 +11,10 @@ func (m *_UciManager) GetUci(engine string) (*UciProcess, error) {
 	}
 	u := NewUci(engine)
 	err := u.Start()
+	if err != nil {
+		return nil, err
+	}
+	err = u.SendUciNewGame()
 	return u, err
 }
 

@@ -5,5 +5,5 @@ type environment struct {
 }
 
 var Environment = &environment{
-	EnginePath: "../engines/",
+	EnginePath: "../engines/mac/",
 }

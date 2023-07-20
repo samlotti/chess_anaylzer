@@ -5,6 +5,17 @@ import (
 	ai "github.com/samlotti/chess_anaylzer/chessboard"
 )
 
+/*
+Thoughts
+Make multiple passes,
+one with a max depth of 3?
+then a second with max depth of 5
+then max time.
+
+Also dont keep creating instances of the engine
+
+*/
+
 var pgnChan = make(chan *PgnData, 1)
 
 // PgnResponse is from worker to consumer
@@ -67,7 +78,7 @@ func (f *PgnAnalyzer) DoAnalyze(msg *PgnData) {
 	} else {
 		ai.ParseFen(brd, ai.StartFen)
 	}
-	for i, mv := range wrapper.InternalMoves {
+	for _, mv := range wrapper.InternalMoves {
 
 		ims := ai.MoveToInputString(mv)
 		err = brd.MakeMove(mv, ims)
@@ -79,8 +90,8 @@ func (f *PgnAnalyzer) DoAnalyze(msg *PgnData) {
 			}
 			return
 		}
-		fen := ai.BoardToFen(brd, i)
-		fmt.Printf("%s \n", fen)
+		// fen := ai.BoardToFen(brd, i)
+		// fmt.Printf("%s \n", fen)
 
 		// brd.PrintBoard("dd")
 	}
@@ -114,7 +125,15 @@ func (f *PgnAnalyzer) DoAnalyze(msg *PgnData) {
 		fenAnalyzer.MoveNum = i + 1
 
 		fmt.Printf("In: %s = %s \n", ims, fen)
-		f.doAnalyzeThisMove(fenAnalyzer)
+		err = f.doAnalyzeThisMove(fenAnalyzer)
+		if err != nil {
+			msg.RChannel <- &PgnResponse{
+				RCode: RCODE_ERROR,
+				Error: err.Error(),
+				Done:  true,
+			}
+			return
+		}
 		// fmt.Printf("Out: %s = %s \n", ims, fen)
 
 		err = brd.MakeMove(mv, ims)
@@ -137,9 +156,12 @@ func (f *PgnAnalyzer) DoAnalyze(msg *PgnData) {
 
 }
 
-func (f *PgnAnalyzer) doAnalyzeThisMove(fenAnalyzer *FenAnalyzer) {
+func (f *PgnAnalyzer) doAnalyzeThisMove(fenAnalyzer *FenAnalyzer) error {
 	dchan := make(chan struct{}, 10)
 	rchan := make(chan *AResults, 10)
+
+	var err error = nil
+
 	go func() {
 		for {
 			m := <-rchan
@@ -149,11 +171,13 @@ func (f *PgnAnalyzer) doAnalyzeThisMove(fenAnalyzer *FenAnalyzer) {
 			fr.ARBestMove = m.BestMode
 			if m.Err != nil {
 				fr.Error = m.Err.Error()
+				err = m.Err
 			}
 
 			fr.Done = m.Done
 			fr.RCode = m.RCode
 			fmt.Printf("send from fen: %+v\n", fr)
+
 			// msg.RChannel <- fr
 
 			if m.Done {
@@ -168,5 +192,7 @@ func (f *PgnAnalyzer) doAnalyzeThisMove(fenAnalyzer *FenAnalyzer) {
 
 	// wait for complete
 	<-dchan
+
+	return err
 
 }

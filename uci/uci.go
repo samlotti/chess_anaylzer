@@ -479,3 +479,14 @@ func (p *UciProcess) addMoveInfo(txt string) {
 func (p *UciProcess) SetAsyncChannel(callbacks chan *UciCallback) {
 	p.callback = callbacks
 }
+
+// SendUciNewGame - sends message and returns when it is ready.
+func (p *UciProcess) SendUciNewGame() error {
+	p.SetEState(ENotReady)
+	err := p.send("ucinewgame")
+	err = p.send("isready")
+	if err == nil {
+		err = p.WaitMoveUpTo(2 * time.Second)
+	}
+	return err
+}
