@@ -2,6 +2,8 @@ package analyzer
 
 import (
 	"fmt"
+	"github.com/samlotti/chess_anaylzer/chessboard/common"
+	"github.com/samlotti/chess_anaylzer/uci"
 	"testing"
 )
 import "github.com/stretchr/testify/assert"
@@ -12,7 +14,7 @@ func collectPgnResults(in chan *PgnResponse) []*PgnResponse {
 
 	for {
 		m := <-in
-		fmt.Printf("Answer: %+v \n", m)
+		fmt.Printf("AnswerPgn: %+v \n", m)
 		r = append(r, m)
 		if m.Done {
 			break
@@ -52,7 +54,12 @@ Nf2 42. g4 Bd3 43. Re6 1/2-1/2
 	assert.NotNil(t, ar)
 }
 
+// Takes 1min 10sec
 func TestPgn2(t *testing.T) {
+
+	Verbose = false
+	common.Verbose = false
+	uci.Verbose = false
 
 	a := &PgnData{}
 	assert.NotNil(t, a)

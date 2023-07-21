@@ -157,9 +157,9 @@ func (p *PgnWrapper) loadAttributes() error {
 		key := sects[0]
 		data := strings.Trim(sects[1], "\"")
 
-		fmt.Printf("Tag: %s\n", tagKV)
+		// fmt.Printf("Tag: %s\n", tagKV)
 
-		fmt.Println("Found:", key, "  ", data)
+		// fmt.Println("Found:", key, "  ", data)
 		p.Attributes[key] = data
 
 		//if key == "FEN" {

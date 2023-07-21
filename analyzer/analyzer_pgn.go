@@ -72,14 +72,9 @@ func (f *PgnAnalyzer) DoAnalyze(msg *PgnData) {
 		return
 	}
 
-	brd := ai.NewBoard()
-	if len(wrapper.StartFen) > 0 {
-		ai.ParseFen(brd, wrapper.StartFen)
-	} else {
-		ai.ParseFen(brd, ai.StartFen)
-	}
+	// Do a quick run to make sure no errors.
+	brd := createNewBoard(wrapper)
 	for _, mv := range wrapper.InternalMoves {
-
 		ims := ai.MoveToInputString(mv)
 		err = brd.MakeMove(mv, ims)
 		if err != nil {
@@ -103,15 +98,11 @@ func (f *PgnAnalyzer) DoAnalyze(msg *PgnData) {
 	//}
 
 	var fenAnalyzer = NewFenAnalyzer()
+	fenAnalyzer.KeepProcess = true
+	defer fenAnalyzer.Close()
 
-	brd = ai.NewBoard()
-	if len(wrapper.StartFen) > 0 {
-		ai.ParseFen(brd, wrapper.StartFen)
-	} else {
-		ai.ParseFen(brd, ai.StartFen)
-	}
-
-	// The initial board fen
+	brd = createNewBoard(wrapper)
+	// The initial board fen ... will analyze using fen
 	fen := ai.BoardToFen(brd, 0)
 	for i, mv := range wrapper.InternalMoves {
 
@@ -125,7 +116,7 @@ func (f *PgnAnalyzer) DoAnalyze(msg *PgnData) {
 		fenAnalyzer.MoveNum = i + 1
 
 		fmt.Printf("In: %s = %s \n", ims, fen)
-		err = f.doAnalyzeThisMove(fenAnalyzer)
+		err = f.doAnalyzeThisMove(fenAnalyzer, msg)
 		if err != nil {
 			msg.RChannel <- &PgnResponse{
 				RCode: RCODE_ERROR,
@@ -156,7 +147,17 @@ func (f *PgnAnalyzer) DoAnalyze(msg *PgnData) {
 
 }
 
-func (f *PgnAnalyzer) doAnalyzeThisMove(fenAnalyzer *FenAnalyzer) error {
+func createNewBoard(wrapper *ai.PgnWrapper) *ai.Board {
+	brd := ai.NewBoard()
+	if len(wrapper.StartFen) > 0 {
+		ai.ParseFen(brd, wrapper.StartFen)
+	} else {
+		ai.ParseFen(brd, ai.StartFen)
+	}
+	return brd
+}
+
+func (f *PgnAnalyzer) doAnalyzeThisMove(fenAnalyzer *FenAnalyzer, msg *PgnData) error {
 	dchan := make(chan struct{}, 10)
 	rchan := make(chan *AResults, 10)
 
@@ -174,11 +175,11 @@ func (f *PgnAnalyzer) doAnalyzeThisMove(fenAnalyzer *FenAnalyzer) error {
 				err = m.Err
 			}
 
-			fr.Done = m.Done
+			fr.Done = false // m.Done
 			fr.RCode = m.RCode
-			fmt.Printf("send from fen: %+v\n", fr)
+			// fmt.Printf("send from fen: %+v\n", fr)
 
-			// msg.RChannel <- fr
+			msg.RChannel <- fr
 
 			if m.Done {
 				dchan <- struct{}{}

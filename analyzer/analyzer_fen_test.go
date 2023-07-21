@@ -12,7 +12,7 @@ func collectFenResults(in chan *AResults) []*AResults {
 
 	for {
 		m := <-in
-		fmt.Printf("Answer: %+v \n", m)
+		fmt.Printf("AnswerFen: %+v \n", m)
 		r = append(r, m)
 		if m.Done {
 			break
@@ -24,6 +24,7 @@ func collectFenResults(in chan *AResults) []*AResults {
 func TestAnalyzer1(t *testing.T) {
 
 	a := NewFenAnalyzer()
+	defer a.Close()
 	assert.NotNil(t, a)
 	//
 	//a.Fen = "2q1rr1k/3bbnnp/p2p1pp1/2pPp3/PpP1P1P1/1P2BNNP/2BQ1PRK/7R b - -"

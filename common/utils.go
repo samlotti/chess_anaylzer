@@ -7,7 +7,7 @@ import (
 	"sync/atomic"
 )
 
-const Verbose = true
+var Verbose = true
 
 type utils struct {
 	seq            int64

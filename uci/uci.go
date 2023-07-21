@@ -23,7 +23,7 @@ http://chess.grantnet.us/index/3/
 
 */
 
-const Verbose = true
+var Verbose = true
 
 type UciState int16
 
@@ -310,7 +310,7 @@ func (p *UciProcess) monitor() {
 
 // send - Sends a line to the chess engine.
 func (p *UciProcess) send(line string) error {
-	fmt.Printf("==== Send: %s\n", line)
+	// fmt.Printf("==== Send: %s\n", line)
 	_, err := fmt.Fprint(p.stdout, line)
 	if err != nil {
 		return err

@@ -18,9 +18,12 @@ Red: blunder  -> -.9
 */
 
 const (
+	DefaultNumPVLines        = 5
+	DefaultEngine            = "zahar"
 	DefaultAnalyzePerMoveSec = 15
-	Verbose                  = true
 )
+
+var Verbose = true
 
 // FenAnalyzer - can analyze a position.
 type FenAnalyzer struct {
@@ -30,12 +33,20 @@ type FenAnalyzer struct {
 	Depth      int
 	MaxTimeSec int
 	NumPVLines int
+
+	// The name of the engine
+	Engine string
+
+	// If tru, the client must close the process
+	KeepProcess bool
+	uciProcess  *uci.UciProcess
 }
 
 func NewFenAnalyzer() *FenAnalyzer {
 	return &FenAnalyzer{
 		MaxTimeSec: DefaultAnalyzePerMoveSec,
-		NumPVLines: 5,
+		NumPVLines: DefaultNumPVLines,
+		Engine:     DefaultEngine,
 	}
 }
 
@@ -68,22 +79,28 @@ func (a *FenAnalyzer) Analyze(rchan chan *AResults) {
 	// The diff between the best move and players move
 	// Is used determine the response of inaccuracy / blunder ...
 	// u, err := uci.UciManager().GetUci("zahak-darwin-amd64-8.0-avx")
-	u, err := uci.UciManager().GetUci("zahak")
-	// u, err := uci.UciManager().GetUci("stockfish")
-	if err != nil {
-		rchan <- AResultsError(err)
-		return
-	}
-	defer uci.UciManager().Return(u)
 
-	err = u.SendUciNewGame()
+	if a.uciProcess == nil {
+		u, err := uci.UciManager().GetUci("zahak")
+		// u, err := uci.UciManager().GetUci("stockfish")
+		if err != nil {
+			rchan <- AResultsError(err)
+			return
+		}
+		a.uciProcess = u
+		if !a.KeepProcess {
+			defer a.Close()
+		}
+	}
+
+	err := a.uciProcess.SendUciNewGame()
 	if err != nil {
 		rchan <- AResultsError(err)
 		return
 	}
 
 	cb := make(chan *uci.UciCallback, 10)
-	u.SetAsyncChannel(cb)
+	a.uciProcess.SetAsyncChannel(cb)
 
 	cbf := func() {
 		if Verbose {
@@ -141,13 +158,13 @@ func (a *FenAnalyzer) Analyze(rchan chan *AResults) {
 	}
 	go cbf()
 
-	err = u.SetPositionFen(a.Fen)
+	err = a.uciProcess.SetPositionFen(a.Fen)
 	if err != nil {
 		rchan <- AResultsError(err)
 		return
 	}
 
-	err = u.SetOption("MultiPV", strconv.Itoa(a.NumPVLines))
+	err = a.uciProcess.SetOption("MultiPV", strconv.Itoa(a.NumPVLines))
 	if err != nil {
 		rchan <- AResultsError(err)
 		return
@@ -158,7 +175,7 @@ func (a *FenAnalyzer) Analyze(rchan chan *AResults) {
 		SearchMove: "",
 		// Fen:        a.Fen,
 	}
-	err = u.SendGo(opts)
+	err = a.uciProcess.SendGo(opts)
 	if err != nil {
 		rchan <- AResultsError(err)
 		return
@@ -168,10 +185,20 @@ func (a *FenAnalyzer) Analyze(rchan chan *AResults) {
 		a.MaxTimeSec = DefaultAnalyzePerMoveSec
 	}
 
-	err = u.WaitMoveUpTo(time.Duration(a.MaxTimeSec) * time.Second)
+	err = a.uciProcess.WaitMoveUpTo(time.Duration(a.MaxTimeSec) * time.Second)
 	if err != nil {
 		rchan <- AResultsError(err)
 		return
+	}
+
+}
+
+// Close - close the engine
+func (a *FenAnalyzer) Close() {
+	if a.uciProcess != nil {
+		fmt.Println("Closing the process")
+		uci.UciManager().Return(a.uciProcess)
+		a.uciProcess = nil
 	}
 
 }
