@@ -243,7 +243,8 @@ func (p *UciProcess) WaitOk(timeout time.Duration) error {
 			return fmt.Errorf("timeout waiting for engine ok")
 		}
 
-		time.Sleep(100 * time.Millisecond)
+		// keep this low, else has big slowdown on pgn analysis
+		time.Sleep(10 * time.Millisecond)
 
 	}
 }

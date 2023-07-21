@@ -40,6 +40,9 @@ type FenAnalyzer struct {
 	// If tru, the client must close the process
 	KeepProcess bool
 	uciProcess  *uci.UciProcess
+
+	// Only set if needed, has performance impact
+	SendNewGameForEachMove bool
 }
 
 func NewFenAnalyzer() *FenAnalyzer {
@@ -93,10 +96,15 @@ func (a *FenAnalyzer) Analyze(rchan chan *AResults) {
 		}
 	}
 
-	err := a.uciProcess.SendUciNewGame()
-	if err != nil {
-		rchan <- AResultsError(err)
-		return
+	var err error = nil
+
+	// This is a performance hit
+	if a.SendNewGameForEachMove {
+		err = a.uciProcess.SendUciNewGame()
+		if err != nil {
+			rchan <- AResultsError(err)
+			return
+		}
 	}
 
 	cb := make(chan *uci.UciCallback, 10)
