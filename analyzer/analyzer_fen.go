@@ -59,7 +59,8 @@ type AResults struct {
 	Err   error
 	Done  bool
 
-	UserMove string
+	UserMove   string
+	MoveNumber int
 
 	BestMode *ARBestMove
 	Info     *ARInfo
@@ -69,7 +70,7 @@ func AResultsError(err error) *AResults {
 	return &AResults{
 		RCode: RCODE_ERROR,
 		Err:   err,
-		Done:  true,
+		Done:  false,
 	}
 }
 
@@ -82,6 +83,8 @@ func (a *FenAnalyzer) Analyze(rchan chan *AResults) {
 	// The diff between the best move and players move
 	// Is used determine the response of inaccuracy / blunder ...
 	// u, err := uci.UciManager().GetUci("zahak-darwin-amd64-8.0-avx")
+
+	// fmt.Printf("MoveNum: %d\n", a.MoveNum)
 
 	if a.uciProcess == nil {
 		u, err := uci.UciManager().GetUci("zahak")
@@ -96,6 +99,8 @@ func (a *FenAnalyzer) Analyze(rchan chan *AResults) {
 		}
 	}
 
+	defer sendDone(rchan)
+
 	var err error = nil
 
 	// This is a performance hit
@@ -107,10 +112,9 @@ func (a *FenAnalyzer) Analyze(rchan chan *AResults) {
 		}
 	}
 
-	cb := make(chan *uci.UciCallback, 10)
-	a.uciProcess.SetAsyncChannel(cb)
-
-	cbf := func() {
+	hasUserMode := false
+	priorDepth := -1
+	cbf := func(cb chan *uci.UciCallback) {
 		if Verbose {
 			println("Waiting for UCI responses")
 		}
@@ -120,10 +124,11 @@ func (a *FenAnalyzer) Analyze(rchan chan *AResults) {
 			if Verbose {
 				fmt.Printf("From UCI: %v\n", cbc)
 			}
-
 			answer := &AResults{}
 
 			answer.UserMove = a.UserMove
+
+			answer.MoveNumber = a.MoveNum
 
 			if cbc.BestMove != nil {
 				answer.RCode = RCODE_BESTMOVE
@@ -131,9 +136,13 @@ func (a *FenAnalyzer) Analyze(rchan chan *AResults) {
 				answer.BestMode = &ARBestMove{}
 				answer.BestMode.BestMove = cbc.BestMove.BestMove
 				answer.BestMode.Ponder = cbc.BestMove.Ponder
-				answer.Done = true
+				answer.Done = false
 			}
 			if cbc.Info != nil {
+				if priorDepth != cbc.Info.Depth {
+					priorDepth = cbc.Info.Depth
+					hasUserMode = false
+				}
 				answer.RCode = RCODE_INFO
 				answer.Err = cbc.Info.Err
 				answer.Info = &ARInfo{}
@@ -143,6 +152,8 @@ func (a *FenAnalyzer) Analyze(rchan chan *AResults) {
 				answer.Info.ScoreCP = cbc.Info.ScoreCP
 				answer.Info.MPv = cbc.Info.MPv
 				answer.Info.MateIn = cbc.Info.MateIn
+				answer.Info.IsUserMove = a.UserMove == cbc.Info.Moves[0]
+				hasUserMode = hasUserMode || answer.Info.IsUserMove
 			}
 
 			if cbc.Err != nil {
@@ -151,7 +162,7 @@ func (a *FenAnalyzer) Analyze(rchan chan *AResults) {
 
 			if answer.Err != nil {
 				answer.RCode = RCODE_ERROR
-				answer.Done = true
+				answer.Done = false
 			}
 
 			rchan <- answer
@@ -164,7 +175,6 @@ func (a *FenAnalyzer) Analyze(rchan chan *AResults) {
 			}
 		}
 	}
-	go cbf()
 
 	err = a.uciProcess.SetPositionFen(a.Fen)
 	if err != nil {
@@ -178,6 +188,11 @@ func (a *FenAnalyzer) Analyze(rchan chan *AResults) {
 		return
 	}
 
+	hasUserMode = false
+	priorDepth = -1
+	ucicb := make(chan *uci.UciCallback, 10)
+	go cbf(ucicb)
+	a.uciProcess.SetAsyncChannel(ucicb)
 	opts := &uci.GoOptions{
 		Depth:      a.Depth,
 		SearchMove: "",
@@ -199,6 +214,49 @@ func (a *FenAnalyzer) Analyze(rchan chan *AResults) {
 		return
 	}
 
+	if !hasUserMode && len(a.UserMove) > 0 {
+		err = a.uciProcess.SetOption("MultiPV", "1")
+		if err != nil {
+			rchan <- AResultsError(err)
+			return
+		}
+
+		hasUserMode = false
+		priorDepth = -1
+		ucicb = make(chan *uci.UciCallback, 10)
+		go cbf(ucicb)
+		a.uciProcess.SetAsyncChannel(ucicb)
+		opts := &uci.GoOptions{
+			Depth:      a.Depth,
+			SearchMove: a.UserMove,
+			// Fen:        a.Fen,
+		}
+		err = a.uciProcess.SendGo(opts)
+		if err != nil {
+			rchan <- AResultsError(err)
+			return
+		}
+
+		if a.MaxTimeSec <= 0 {
+			a.MaxTimeSec = DefaultAnalyzePerMoveSec
+		}
+
+		err = a.uciProcess.WaitMoveUpTo(time.Duration(a.MaxTimeSec) * time.Second)
+		fmt.Println("done", err)
+		if err != nil {
+			rchan <- AResultsError(err)
+			return
+		}
+
+	}
+
+}
+
+func sendDone(rchan chan *AResults) {
+	rchan <- &AResults{
+		RCode: RCODE_DONE,
+		Done:  true,
+	}
 }
 
 // Close - close the engine

@@ -94,9 +94,9 @@ Kg4 Qe6+ 80. Qf5 Qg8+ 81. Qg5 Qe6+ 82. f5 Qa2 83. Qf4+ Kd5 84. Kg5 Qb2 85.
 f6 Qg2+ 86. Kh6 1-0
 `
 
-	a.NumLines = 5
+	a.NumLines = 2
 	a.MaxTimeSec = 1
-	a.Depth = 2
+	a.Depth = 5
 	rchan := make(chan *PgnResponse, 10)
 	a.RChannel = rchan
 	pa := NewPgnAnalyzer()

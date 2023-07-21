@@ -216,7 +216,7 @@ func (p *UciProcess) Start() error {
 		return err
 	}
 
-	fmt.Println("Command running")
+	//fmt.Println("Command running")
 
 	p.state = UciRunning
 
@@ -264,6 +264,10 @@ func (p *UciProcess) monitor() {
 		if Verbose {
 			fmt.Printf("From Engine: %s\n", txt)
 		}
+
+		//if p.callback == nil && len(txt) > 0 {
+		//	fmt.Printf("Response from UCI but no callback to listen: %s\n", txt)
+		//}
 
 		if p.callback != nil {
 			// fmt.Println("sending to callback")

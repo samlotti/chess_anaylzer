@@ -25,8 +25,8 @@ type PgnResponse struct {
 	Error      string      `json:"error"` // IF there is an error
 	ARBestMove *ARBestMove `json:"bestMove"`
 	ARInfo     *ARInfo     `json:"info"`
-	ARYourMove *ARBestMove `json:"yourMove"`
 	MoveNum    int         `json:"moveNum"`
+	PlayedMove string      `json:"playedmove"`
 	Done       bool        `json:"done"` // The end of the messages
 }
 
@@ -107,12 +107,13 @@ func (f *PgnAnalyzer) DoAnalyze(msg *PgnData) {
 	for i, mv := range wrapper.InternalMoves {
 
 		ims := ai.MoveToInputString(mv)
+		algstr := ai.MoveToString(mv)
 
 		fenAnalyzer.NumPVLines = msg.NumLines
 		fenAnalyzer.MaxTimeSec = msg.MaxTimeSec
 		fenAnalyzer.Depth = msg.Depth
 		fenAnalyzer.Fen = fen
-		fenAnalyzer.UserMove = ims
+		fenAnalyzer.UserMove = algstr
 		fenAnalyzer.MoveNum = i + 1
 
 		fmt.Printf("In: %s = %s \n", ims, fen)
@@ -175,11 +176,21 @@ func (f *PgnAnalyzer) doAnalyzeThisMove(fenAnalyzer *FenAnalyzer, msg *PgnData) 
 				err = m.Err
 			}
 
+			fr.PlayedMove = m.UserMove
+			fr.MoveNum = m.MoveNumber
 			fr.Done = false // m.Done
 			fr.RCode = m.RCode
+
+			//if fr.RCode == RCODE_DONE {
+			//	// Just ignore these, as they're from the fen search
+			//	continue
+			//}
+
 			// fmt.Printf("send from fen: %+v\n", fr)
 
-			msg.RChannel <- fr
+			if fr.RCode != RCODE_DONE {
+				msg.RChannel <- fr
+			}
 
 			if m.Done {
 				dchan <- struct{}{}

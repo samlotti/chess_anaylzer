@@ -80,3 +80,12 @@ func (u *utils) AToI(val string, dflt int) (int, error) {
 	return ival, err
 
 }
+
+func (u *utils) Contains(search string, ary []string) bool {
+	for _, v := range ary {
+		if v == search {
+			return true
+		}
+	}
+	return false
+}
